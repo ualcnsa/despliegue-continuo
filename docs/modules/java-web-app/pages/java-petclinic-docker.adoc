@@ -1,6 +1,12 @@
 = PetClinic con Docker
 
-Para realizar el despliegue de PetClinic como contenedor, primero tenemos que https://www.callicoder.com/spring-boot-docker-example/[dockerizar] la aplicación, luego publicar la imagen de contenedor en un registro como DockerHub o Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.
+Para realizar el *despliegue de PetClinic como contenedor*: 
+
+. Primero, tenemos que https://www.callicoder.com/spring-boot-docker-example/[dockerizar] la aplicación.
+
+. Luego, publicar la imagen de contenedor en un registro como DockerHub o Google Artifact Registry (antes Container Registry). 
+
+. Y por último, ejecutar el contenedor en la instancia de despliegue.
 
 El contenedor para el despliegue de PetClinic se construirá a partir de un `Dockerfile` que definirá cómo se construye la imagen del contenedor, y cómo se ejecuta la aplicación en el contenedor. Utilizará la base de datos H2 embebida. Este contenedor para el despliegue de PetClinic será independiente de la configuración _Dev Containers_ que ya posee el proyecto PetClinic, así como del entorno _docker-compose_. Se podría haber optado por desplegar PetClinic con _docker-compose_, pero en este caso vamos a desplegarlo como un contenedor independiente.
 
@@ -13,7 +19,7 @@ Para trabajar con contenedores Docker en tu equipo local, debes tener Docker ins
 
 [IMPORTANT]
 ====
-Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genéricamente llamado _upstream_) disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. En esta sección necesitarás poder hacer cambios sobre el mismo, básicamente vamos a añadir al proyecto un archivo `Dockerfile` y un archivo `Jenkinsfile`, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. Verás que en los bloques de código de este documento indica como URL del repositorio `https://github.com/ualcnsa/spring-petclinic.git`, que deberás cambiar por la URL de tu repositorio forkeado.
+Hasta ahora nos estamos basando en el proyecto _PetClinic_ original (genéricamente llamado _upstream_) disponible en https://github.com/spring-projects/spring-petclinic[GitHub]. En esta sección necesitarás poder hacer cambios sobre el mismo: básicamente vamos a añadir al proyecto un archivo `Dockerfile` y un archivo `Jenkinsfile`. Así que debes crear un _fork_ y trabajar con tu _fork_ a partir de ahora. Verás que en los bloques de código de este documento indica como URL del repositorio `https://github.com/ualcnsa/spring-petclinic.git`, que deberás cambiar por la URL de tu fork.
 ====
 
 == Creación del `Dockerfile` multi-stage
@@ -99,7 +105,7 @@ Para poder hacer `push` de la imagen del contenedor a un registro de contenedore
 
 [WARNING]
 ====
-Container Registry era hasta ahora el servicio de Google Cloud para el registro de contenedores, pero ha sido reemplazado por Artifact Registry. Aunque Container Registry sigue funcionando, se recomienda usar Artifact Registry.
+Container Registry era hasta ahora el servicio de Google Cloud para el registro de contenedores, pero ha sido reemplazado por Artifact Registry. Aunque Container Registry sigue funcionando, se recomienda usar Artifact Registry. Si deseas ampliar información, consulta la https://cloud.google.com/artifact-registry/docs/transition/transition-from-gcr?hl=es-419[Transición desde Container Registry]
 
 .Container Registry is deprecated
 image::container-registry-deprecated.png[role="thumb", align="center"]
@@ -107,7 +113,14 @@ image::container-registry-deprecated.png[role="thumb", align="center"]
 ====
 
 
-Configura la  https://cloud.google.com/artifact-registry/docs/docker/authentication[autenticación para Docker] para conectar al Registro de Contenedores con tus credenciales, y hacer `push` y `pull` de tus imágenes. Para ello debes configurar los los permisos necesarios para acceder al registro, utilizando una https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es#json-key[clave de cuenta de servicio (JSON key file)] como método de autenticación:
+La https://cloud.google.com/artifact-registry/docs/docker/authentication[autenticación para Docker] de Artifact Registry permite conectar al registro de contenedores con tus credenciales, y hacer `push` y `pull` de tus imágenes. Existen varios https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es-419#methods[métodos de autenticacion], vamos a usar la https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es-419#json-key[clave de cuenta de servicio]. 
+
+[NOTE]
+====
+Clave de cuenta de servicio: Es un par de claves administrado por el usuario que puedes usar como credencial para una cuenta de servicio. Debido a que la credencial es de larga duración, es la opción menos segura de todos los métodos de autenticación disponibles.
+====
+
+. Configura los permisos necesarios para acceder al registro utilizando una https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es#json-key[clave de cuenta de servicio (JSON key file)] como método de autenticación:
 
 * En la Consola Google Cloud, seleccionar el proyecto Google Cloud.
 * En el menú de navegación seleccionar `IAM y administración | https://console.cloud.google.com/apis/credentials/serviceaccountkey[Cuentas de servicio]`.
@@ -134,115 +147,129 @@ No olvides añadir la carpeta `secret/` al archivo `.gitignore` para evitar publ
 
 [source, bash]
 ----
-cat keyfile.json | docker login -u _json_keyE --password-stdin https://LOCATION-docker.pkg.dev <1>
+cat keyfile.json | docker login -u _json_key --password-stdin https://LOCATION-docker.pkg.dev <1>
 ----
-<1> `LOCATION` es la ubicación regional o multirregional del repositorio en el que se almacena la imagen. Por ejemplo, `https://us-east1-docker.pkg.dev` para este de estados unidos (recomendado).
+<1> `LOCATION` es la ubicación regional o multirregional del repositorio en el que se almacena la imagen. Por ejemplo, `us-east1` para la región Este de Estados Unidos (_recomendado_). Para otras localizaciones, consulta las https://cloud.google.com/artifact-registry/docs/repositories/repo-locations?hl=es-419[Ubicaciones de Artifact Registry]
 
 
 .Autenticación de Docker contra Container Registry
 image::cloud-containers-registry-login-2024.png[role="thumb", align="center"]
 
+== Activación de la API y creación del repositorio
 
+Para poder publicar la imagen en Artifact Registry, primero debemos activar la API de Artifact Registry en nuestro proyecto GCP, y luego crear un repositorio en el que almacenar la imagen del contenedor.
 
-== Publicación y despliegue _manual_
-
-. Construir el contenedor con el nombre completo incluyendo la referencia a Container registry (gcr.io). Primero definimos una variable de entorno con el nombre de nuestro proyecto GCP, y luego construimos de nuevo la imagen con el nombre completo del registro de contenedores: 
-
-
-[source, bash]
-----
-GOOGLE_CLOUD_PROJECT=cnsa-2024-user123
-
-docker build -t eu-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .
-----
-
- 
-[start=2]
-. A continuación vamos a publicar con `docker push`: habilita la API de Artifact Registry en tu proyecto GCP, accediendo a la URL https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com[https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com] y habilitando la API.
+. Habilita la API de Artifact Registry en tu proyecto GCP, accediendo a la URL https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com[https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com] y habilitando la API.
 
 .Habilitar la API Container Registry
-image::artifact-registry-habilitar-api-2024.png[role="thumb", align="center"]
+image::artifact-registry-habilitar-api-2024.png[role="thumb", align="center", width="80%"]
 
-. Si el repositorio de destino no existe, crea un repositorio nuevo. Debes tener al menos el access de escritor de Artifact Registry al repositorio.
+[start=2]
+. Crea un *nuevo repositorio* para almacenar las imágenes de Docker: 
 
-Cuando creas un repositorio, debes establecer la siguiente configuración que no se puede cambiar después de crearlo:
+* Abre la página https://console.cloud.google.com/artifacts[Repositorios] en la consola de Google Cloud.
 
-    Formato del artefacto.
-    Modo de repositorio, si hay varios modos disponibles para el formato seleccionado
-    Ubicación del repositorio
-    Encriptación con claves administradas por Google o claves de encriptación administradas por el cliente Artifact Registry usa claves de encriptación administradas por Google de forma predeterminada.
-
-Crea un repositorio con la consola de Google Cloud
-
-Abre la página Repositorios en la consola de Google Cloud.
-https://console.cloud.google.com/artifacts?hl=es
-
-Especifica el nombre del repositorio. Para la ubicación de cada repositorio en un proyecto, los nombres de los repositorios deben ser únicos.
-
-Selecciona el formato del repositorio: docker.
-
-Si hay varios modos de repositorio disponibles, selecciona Estándar
-
-En Tipo de ubicación, elige la ubicación para el repositorio:
-
-    Elige el tipo de ubicación: Región o Multirregional. La lista de ubicaciones cambia para reflejar tu selección.
-
-    En la lista Región, selecciona una ubicación: us-east1
-Agrega una descripción para el repositorio. Las descripciones ayudan a identificar el propósito del repositorio y el tipo de artefactos que contiene.
-
-En la sección Encriptación, elige el mecanismo de encriptación del repositorio.
-
-    Clave administrada por Google: Encripta el contenido de un repositorio mediante una clave de encriptación administrada por Google.
-Haz clic en Crear.
-
-
-
+* Haz clic en Crear repositorio.
 
 .Haz clic en Crear repositorio.
-image::artifact-registry-crea-repositorio-2024.png[role="thumb", align="center"]
+image::artifact-registry-crea-repositorio-2024.png[role="thumb", align="center", width="80%"]
 
-[start=3]
-. Publica la imagen con ```docker push [HOSTNAME]/[PROJECT-ID]/[IMAGE]:[TAG]```: 
+
+* Especifica `docker-repo` como el nombre del repositorio.
+
+* Elige `Docker` como formato y `Estándar` como modo.
+
+* En Tipo de ubicación, selecciona `Región` y, luego, elige la ubicación `us-east1`.
+
+* En la sección Encriptación, deja la opción predeterminada: Clave administrada por Google. Deja las opciones predeterminadas en el resto de opciones. 
+
+* Haz clic en Crear.
+
+.Repositorio Docker creado
+image::artifact-registry-repo-creado-2024.png[role="thumb", align="center", width="80%"]
+
+
+== Publicación de la imagen en el repositorio
+
+Antes de enviar la imagen de Docker a Artifact Registry, debes crearla con el nombre del repositorio, o bien simplemente etiquetarla si ya la has creado previamente.
+
+. Construye o etiqueta la imagen: Para construir la imagen: 
 
 [source, bash]
 ----
-docker push eu-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
+docker build -t us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0 .
 ----
 
-[start=4]
+O bien, para etiquetar la imagen ya existente:
+
+[source, bash]
+----
+docker tag petclinic-docker:latest us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0
+----
+
+En ambos casos, el nombre de la imagen está compuesto por varios elementos: 
+
+* `us-east1` es la ubicación del repositorio.
+
+* `docker.pkg.dev` es el nombre de host para el repositorio de Docker que creaste.
+
+* `PROJECT` es el nombre del proyecto de Google Cloud, escribe lo que corresponda. 
+
+* `docker-repo` es el nombre del repositorio que creaste.
+
+* `petclinic` es el nombre de imagen que deseas usar en el repositorio. El nombre de la imagen puede ser diferente del nombre de la imagen local. 
+
+* `1.0` es la etiqueta que agregas a la imagen de Docker. Si no especificaste una etiqueta, Docker aplicará la etiqueta predeterminada `latest`.
+
+
+[start=2]
+. Publica la imagen con `docker push`: 
+
+[source, bash]
+----
+docker push us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0
+----
+
+[start=3]
 . Comprueba que se ha publicado correctamente.
 
 .Lista de imágenes en Container Registry
-image::container-registry-pushed-petclinic.png[role="thumb", align="center"]
+image::artifact-registry-imagen-pushed-2024.png[role="thumb", align="center", width="80%"]
 
-La imagen del contenedor PetClinic ya está disponible en el registro privado de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer `docker pull` de dicha imagen para descargarla en cualquier máquina con docker, y ejecutarlo con `docker run`.
+== Despliegue _manual_ del contenedor
+
+La imagen del contenedor PetClinic ya está disponible de manera _privada_ en el repositorio de Docker de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer `docker pull` de dicha imagen para descargarla en cualquier máquina y ejecutarla con `docker run`.
 
 [source, bash]
 ----
-GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
+docker pull us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0
 
-docker run -p 8080:8080 -t --name petclinic  gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
+docker run -p 8080:8080 -t --name petclinic  us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0
 ----
 
-Si conectas a la instancia de despliegue que creamos al principio de esta actividad, y ejecutas el comando `docker run` anterior, dará un error de autenticación:
+Si conectas a la *instancia de despliegue* que creamos al principio de esta actividad, y ejecutas los comandos `docker pull` o `docker run` anteriores, dará un *error de autenticación*:
 
 .Error de autenticación en Container Registry
-image::docker-run-petclinic-webapp-error-authentication.png[role="thumb", align="center"]
+image::docker-run-petclinic-webapp-error-authentication-2024.png[role="thumb", align="center"]
 
-Para arreglarlo, habrá que copiar en la máquina de despliegue el archivo de credenciales `.json` con premisos sobre Container Registry. A continuación se muestran los comandos necesarios para ello. Una vez disponible este archivo en la instancia de despliegue ejecutar el comando `docker login` y tras ello ya si podremos hacer `docker pull` y `docker run`.
+Para arreglarlo, habrá que copiar en la máquina de despliegue el archivo de credenciales `.json` con premisos sobre Artifact Registry. A continuación se muestran los comandos necesarios para ello. Una vez disponible este archivo en la instancia de despliegue, ejecuta el comando `docker login` y tras ello ya si podremos hacer `docker pull` y `docker run`.
 
 [source, bash]
 ----
-# Compiamos el archivo de credenciales
-scp ./secret/file.json ubuntu@DNS_MAQUINA_DEPLOY:~/keyfile.json
+# Copiamos el archivo de credenciales
+scp -i ~/.ssh/id_rsa ./secret/file.json ubuntu@DNS_MAQUINA_DEPLOY:~/keyfile.json
 # Conectamos a la máquina de despliegue
 ssh ubuntu@DNS_MAQUINA_DEPLOY
 # Autenticamos docker contra Container Registry
-cat keyfile.json | docker login -u _json_key --password-stdin https://gcr.io
+cat keyfile.json | docker login -u _json_key --password-stdin https://us-east1-docker.pkg.dev
 # Variable de entorno con el nombre del proyecto
-GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
-# ejecutamos el contenedor desde gcr.io
-docker run -d -p 8080:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
+GOOGLE_CLOUD_PROJECT=cnsa-2024
+
+# Descargamos la imagen
+docker pull us-east1-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/docker-repo/petclinic:1.0
+
+# ejecutamos el contenedor
+docker run -d -p 8080:8080 -t --name petclinic us-east1-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/docker-repo/petclinic:1.0
 ----
 
 [WARNING]
@@ -250,7 +277,7 @@ docker run -d -p 8080:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petc
 Si la ejecución de `docker run` te da error, prueba a ejecutarlo con `sudo`. Para evitar tener que escribir siempre `sudo` delante de cualquier comando `docker`, ejecuta: `sudo usermod -aG docker $USER`. Tras ello, reinicia la sesión. Prueba ahora sin `sudo`, a partir de ahora llama siempre a docker sin `sudo`. Más info https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user[aquí]
 ====
 
-Es posible que la ejecución del contenedor de un error, porque el puerto 8080 ya esté en uso:
+Es posible que la ejecución del contenedor de un error, porque el puerto 8080 ya esté en uso con la aplicación PetClinic que desplegamos en la sección anterior (sin Docker). En ese caso, el error será algo así como:
 
 [source, bash]
 ----
@@ -261,16 +288,16 @@ Para solucionarlo, bien detén el proceso java que está corriendo con la aplica
 
 [source, bash]
 ----
-docker run -p 80:8080 -t --name petclinic gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0
+docker run -p 80:8080 -t --name petclinic us-east1-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/docker-repo/petclinic:1.0
 ----
 
-Pero ten en cuenta que si el contenedor ya se ha creado y no ha podido iniciarse porque el puerto 8080 estaba ocupado, si intentas volver a crearlo con `docker run` te dirá que el contenedor ya existe. Revisa si está ya creado y en ese caso inícialo. 
+Pero ten en cuenta que si el contenedor ya se ha creado y no ha podido iniciarse porque el puerto 8080 estaba ocupado, si intentas volver a crearlo con `docker run` te dirá que el contenedor ya existe. Revisa si está ya creado con `docker ps -a`, y en ese caso inícialo con `docker start`. 
 
 [source, bash]
 ----
 ubuntu@web-deploy-vm-tf:~$ docker ps -a
 CONTAINER ID   IMAGE                            COMMAND                CREATED              STATUS    PORTS     NAMES
-6e174d959f3b   gcr.io/cnsa-2022/petclinic:1.0   "java -jar /app.jar"   About a minute ago   Created             petclinic
+3ed683cccecd   us-east1-docker.pkg.dev/cnsa-2024/docker-repo/petclinic:1.0   "java -jar /app.jar"     56 seconds ago   Exited       0.0.0.0:8080->8080/tcp, :::8080->8080/tcp  petclinic
 
 ubuntu@web-deploy-vm-tf:~$ docker start petclinic
 petclinic
@@ -278,7 +305,7 @@ petclinic
 
 Ya puedes comprobar en tu navegador que la aplicación PetClinic se está ejecutando en el puerto 8080 de la máquina de despliegue.
 
-== Integración y despliegue continuo
+== Integración y Despliegue continuo con Jenkins
 
 Hasta ahora hemos realizado todos los pasos de construcción, prueba y despliegue manualmente. A continuación, vamos a automatizar en Jenkins todo el proceso, cuyas principales tareas son: 
 

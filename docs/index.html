@@ -479,7 +479,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_instalación_y_configuración_de_jenkins">6. Instalación y configuración de Jenkins</a>
 <ul class="sectlevel2">
 <li><a href="#_construcción_del_contenedor_jenkins">6.1. Construcción del contenedor Jenkins</a></li>
-<li><a href="#_publicación_en_google_container_registry">6.2. Publicación en Google Container Registry</a></li>
+<li><a href="#_publicación_de_la_imagen_en_un_registro_de_contenedores">6.2. Publicación de la imagen en un registro de contenedores</a></li>
 <li><a href="#_ejecución_del_contenedor_de_jenkins">6.3. Ejecución del contenedor de Jenkins</a></li>
 <li><a href="#_configuración_básica_de_jenkins">6.4. Configuración básica de Jenkins</a></li>
 <li><a href="#_instalación_de_plugins_adicionales">6.5. Instalación de plugins adicionales</a></li>
@@ -510,8 +510,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_creación_del_dockerfile_multi_stage">9.1. Creación del <code>Dockerfile</code> multi-stage</a></li>
 <li><a href="#_autenticación_en_artifact_registry">9.2. Autenticación en Artifact Registry</a></li>
-<li><a href="#_publicación_y_despliegue_manual">9.3. Publicación y despliegue <em>manual</em></a></li>
-<li><a href="#_integración_y_despliegue_continuo">9.4. Integración y despliegue continuo</a></li>
+<li><a href="#_activación_de_la_api_y_creación_del_repositorio">9.3. Activación de la API y creación del repositorio</a></li>
+<li><a href="#_publicación_de_la_imagen_en_el_repositorio">9.4. Publicación de la imagen en el repositorio</a></li>
+<li><a href="#_despliegue_manual_del_contenedor">9.5. Despliegue <em>manual</em> del contenedor</a></li>
+<li><a href="#_integración_y_despliegue_continuo">9.6. Integración y despliegue continuo</a></li>
 </ul>
 </li>
 </ul>
@@ -548,7 +550,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Computación en la Nube, Servicios y Aplicaciones. Joaquín Cañadas &lt;<a href="mailto:jjcanada@ual.es">jjcanada@ual.es</a>&gt;, Francisco García &lt;<a href="mailto:paco.garcia@ual.es">paco.garcia@ual.es</a>&gt;</p>
 </div>
 <div class="paragraph">
-<p><em>Version</em> <strong>0.22.2</strong></p>
+<p><em>Version</em> <strong>0.24.0</strong></p>
 </div>
 <div class="exampleblock">
 <div class="title">Objetivos</div>
@@ -575,7 +577,7 @@ La entrega será mediante el envío de un informe y el acceso al profesor a los 
 </div>
 </div>
 <div class="paragraph">
-<p>Esta es la versión <strong>0.22.2</strong> de este documento.</p>
+<p>Esta es la versión <strong>0.24.0</strong> de este documento.</p>
 </div>
 </div>
 </div>
@@ -1468,9 +1470,9 @@ USER jenkins</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_publicación_en_google_container_registry">6.2. Publicación en Google Container Registry</h3>
+<h3 id="_publicación_de_la_imagen_en_un_registro_de_contenedores">6.2. Publicación de la imagen en un registro de contenedores</h3>
 <div class="paragraph">
-<p>Opcionalmente podemos publicar nuestra imagen personalizada en DockerHub, o alternativamente el Google Container Registry. Más adelante se describirá cómo hacerlo.</p>
+<p>Opcionalmente podemos publicar nuestra imagen personalizada en DockerHub, o alternativamente el Google Container Registry (<em>deprecado</em>) o en Google Artifact Registry. Más adelante se describirá cómo hacerlo.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1831,7 +1833,7 @@ OS name: "linux", version: "6.5.0-1014-gcp", arch: "amd64", family: "unix"</code
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">pipeline {
     agent {
         docker {
-            image 'maven:3.9-eclipse-temurin-21-jammy' <i class="conum" data-value="1"></i><b>(1)</b>
+            image 'maven:3.9-eclipse-temurin-21-alpine' <i class="conum" data-value="1"></i><b>(1)</b>
             args '-v $HOME/.m2:/root/.m2' <i class="conum" data-value="2"></i><b>(2)</b>
         }
     }
@@ -1860,6 +1862,13 @@ OS name: "linux", version: "6.5.0-1014-gcp", arch: "amd64", family: "unix"</code
 </tr>
 </table>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
 <div class="paragraph">
 <p>Te dará error al construir el proyecto.</p>
 </div>
@@ -1878,6 +1887,10 @@ permission denied while trying to connect to the Docker daemon socket at unix://
 <div class="content">
 <pre class="highlight"><code>sudo chmod 666 /var/run/docker.sock</code></pre>
 </div>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Tras ello deben construirse correctamente. La nueva salida será algo así:</p>
@@ -1976,7 +1989,7 @@ srw-rw-rw- 1 root docker 0 Mar  2 19:24 /var/run/docker.sock</code></pre>
         stage('Back-end') {
             agent {
                 docker {
-                    image 'maven:3.9-eclipse-temurin-21-jammy'
+                    image 'maven:3.9-eclipse-temurin-21-alpine'
                     args '-v $HOME/.m2:/root/.m2'
                 }
             }
@@ -2369,11 +2382,15 @@ srw-rw-rw- 1 root docker 0 Mar  2 19:24 /var/run/docker.sock</code></pre>
 <div class="paragraph">
 <p><a href="https://spring.io/projects/spring-boot">Spring Boot</a> es un framework de código abierto para el desarrollo de aplicaciones Java basadas en <a href="https://spring.io/">Spring</a>. Spring Boot genera una proyecto Maven/Gradle con todo lo necesario y que se autoconfigura en el arranque. Por ejemplo, si decimos que queremos una aplicación web, Spring Boot automáticamente embebe un Tomcat y lo configura con el servlet de Spring. Toda la configuración la añade al archivo de la herramienta de <em>build</em> que indiquemos, en caso de Maven, al archivo <strong><code>pom.xml</code></strong>.</p>
 </div>
+<div class="exampleblock">
+<div class="content">
 <div class="paragraph">
 <p>Recordemos que <strong>Maven</strong> es una herramienta software para la gestión y construcción de proyectos Java. <a href="https://maven.apache.org/">Apache Maven</a> estandariza la configuración de un proyecto en todo su ciclo de vida, como son todas las fases de compilación, ejecución de pruebas, empaquetado, etc. Maven permite la gestión de dependencias entre módulos y distintas versiones de librerías, simplemente indicando los módulos que componen el proyecto, y las dependencias utiliza el software que estamos desarrollando, en un fichero XML de configuración llamado POM (Project Object Model).</p>
 </div>
+</div>
+</div>
 <div class="paragraph">
-<p>Para el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el <code>.jar</code> (empaquetado) y ejecutarlo:</p>
+<p>Para ejecutar el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el <code>.jar</code> (empaquetado) y ejecutarlo:</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -2416,7 +2433,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 <div class="title">Fig. 51. Página principal de PetClinic</div>
 </div>
 <div class="paragraph">
-<p>En su configuración predeterminada, Petclinic utiliza una base de datos en memoria (H2) que se inicia con datos predeterminados, y los nuevos datos que se guarden se pierden al reiniciar la aplicación.</p>
+<p>En su configuración predeterminada, Petclinic utiliza una base de datos en memoria (<a href="http://www.h2database.com/html/main.html">H2</a>) que se inicia con datos predeterminados, y los nuevos datos que se guarden se pierden al reiniciar la aplicación.</p>
 </div>
 <div class="paragraph">
 <p>En caso de necesitar persistencia de los datos, PetClinic también está preconfigurada para usar MySql. Para cambiar el tipo de base de datos, la aplicación debe ejecutarse con un perfil de MySql: <code>spring.profiles.active=mysql</code>.</p>
@@ -2449,7 +2466,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
-<img src="modules/java-web-app/images/vscode-devcontainer-banner.png" alt="vscode devcontainer banner">
+<img src="modules/java-web-app/images/vscode-devcontainer-banner.png" alt="vscode devcontainer banner" width="60%">
 </div>
 <div class="title">Fig. 52. Aviso Dev Containers en Visual Studio Code</div>
 </div>
@@ -2517,11 +2534,11 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, <code>any</code> indica que se ejecutará cualquier nodo, en nuestro caso será en el nodo <em>principal (_master</em>) ya que es el único que hay definido.</td>
+<td>agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, <code>any</code> indica que se ejecutará cualquier nodo, en nuestro caso será en el nodo <em>principal</em> (<em>main</em>) ya que es el único que hay definido.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>como herramienta para la construcción se usará maven. Pon aquí el nombre que diste a tu instalación de Maven configurada previamente en Tools Configuration.</td>
+<td>como herramienta para la construcción se usará Naven. Pon aquí el <strong>nombre</strong> que diste a tu instalación de Maven configurada previamente en <em>Tools Configuration</em>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
@@ -2533,7 +2550,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los <em>goals</em> <code>clean package</code>: primero <code>clean</code> elimina todo lo generado en la construcción anterior que se encuentra en la carpeta <code>target</code>, y a continuación se lanza la construcción con <code>package</code> tal y como está definida en el archivo <code>pom.xml</code>. La opción <code>-Dcheckstyle.skip</code> anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.</td>
+<td>Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realiza con los <em>goals</em> de Maven <code>clean package</code>: primero <code>clean</code> elimina todo lo generado en la construcción anterior que se encuentra en la carpeta <code>target</code>, y a continuación se lanza la construcción con <code>package</code> tal y como está definida en el archivo <code>pom.xml</code>. La opción <code>-Dcheckstyle.skip</code> anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
@@ -2565,14 +2582,14 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Alternativamente, podemos hacer que la construcción se realice en un agente que sea un contenedor docker:</p>
+<p>Alternativamente, podemos hacer que la construcción se realice en un agente que sea un contenedor docker. Para ello, crea el siguiente pipeline de nombre <code>spring-petclinic-pipeline-agent-docker</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">pipeline {
    agent {
         docker { <i class="conum" data-value="1"></i><b>(1)</b>
-            image 'maven:3.9-eclipse-temurin-17-focal'
+            image 'maven:3.9-eclipse-temurin-17-alpine'
             args '-v $HOME/.m2:/root/.m2'
         }
     }
@@ -2606,7 +2623,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Agente donde construir el proyecto, ahora no se hace en el nodo principal sino en un contenedor docker seleccionado. La imagen de Maven que se utiliza es <code>maven:3.9-eclipse-temurin-17-focal</code>, y se monta el volumen del directorio <code>.m2</code> del usuario en el contenedor.</td>
+<td>Agente donde construir el proyecto, ahora no se hace en el nodo principal sino en un contenedor docker seleccionado. La imagen de Maven que se utiliza es <code>maven:3.9-eclipse-temurin-17-alpine</code>, y se monta el volumen del directorio <code>.m2</code> del usuario en el contenedor. Se ha elegido la imagen de Maven con Java 17 y Alpine, que es una distribución de Linux muy ligera, en lugar de la imagen de Maven con Java 21 porque esta última da problemas con la creación del directorio <code>.m2</code> en el contenedor.</td>
 </tr>
 </table>
 </div>
@@ -2623,7 +2640,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
-<p>La <strong>Cobertura</strong> de código nos indica el porcentaje de código de producción que está siendo ejecutado por los test. Es deseable tener un valor de cobertura lo más próximo posible al 100%</p>
+<p>La <a href="https://es.wikipedia.org/wiki/Cobertura_de_c%C3%B3digo"><strong>Cobertura de código</strong></a> nos indica el porcentaje de código de producción que está siendo ejecutado por los test. Es deseable tener un valor de cobertura lo más próximo posible al 100%</p>
 </div>
 </div>
 </div>
@@ -2668,7 +2685,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 </table>
 </div>
 <div class="paragraph">
-<p>Para visualizar el resultado de la cobertura en Jenkins:</p>
+<p>Para visualizar el resultado de la <strong>cobertura en Jenkins</strong>:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -2782,7 +2799,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 <p>Sería labor del equipo de desarrollo revisar los errores detectados y tratar de corregirlos, siempre que realmente supongan una mejora para la calidad del código.</p>
 </div>
 <div class="paragraph">
-<p>Para ejecutar y visualizar el informe en Jenkins:</p>
+<p>Para ejecutar y visualizar el <strong>informe de CheckStyle en Jenkins</strong>:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -2936,7 +2953,20 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 <h2 id="_petclinic_con_docker">9. PetClinic con Docker</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Para realizar el despliegue de PetClinic como contenedor, primero tenemos que <a href="https://www.callicoder.com/spring-boot-docker-example/">dockerizar</a> la aplicación, luego publicar la imagen de contenedor en un registro como DockerHub o Google Container Registry, y por último ejecutar el contenedor en la instancia de despliegue.</p>
+<p>Para realizar el <strong>despliegue de PetClinic como contenedor</strong>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Primero, tenemos que <a href="https://www.callicoder.com/spring-boot-docker-example/">dockerizar</a> la aplicación.</p>
+</li>
+<li>
+<p>Luego, publicar la imagen de contenedor en un registro como DockerHub o Google Artifact Registry (antes Container Registry).</p>
+</li>
+<li>
+<p>Y por último, ejecutar el contenedor en la instancia de despliegue.</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
 <p>El contenedor para el despliegue de PetClinic se construirá a partir de un <code>Dockerfile</code> que definirá cómo se construye la imagen del contenedor, y cómo se ejecuta la aplicación en el contenedor. Utilizará la base de datos H2 embebida. Este contenedor para el despliegue de PetClinic será independiente de la configuración <em>Dev Containers</em> que ya posee el proyecto PetClinic, así como del entorno <em>docker-compose</em>. Se podría haber optado por desplegar PetClinic con <em>docker-compose</em>, pero en este caso vamos a desplegarlo como un contenedor independiente.</p>
@@ -2966,7 +2996,7 @@ java -jar target/*.jar <i class="conum" data-value="2"></i><b>(2)</b></code></pr
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Hasta ahora nos estamos basando en el proyecto <em>PetClinic</em> original (genéricamente llamado <em>upstream</em>) disponible en <a href="https://github.com/spring-projects/spring-petclinic">GitHub</a>. En esta sección necesitarás poder hacer cambios sobre el mismo, básicamente vamos a añadir al proyecto un archivo <code>Dockerfile</code> y un archivo <code>Jenkinsfile</code>, así que crea un <em>fork</em> y trabaja con tu <em>fork</em> a partir de ahora. Verás que en los bloques de código de este documento indica como URL del repositorio <code><a href="https://github.com/ualcnsa/spring-petclinic.git" class="bare">https://github.com/ualcnsa/spring-petclinic.git</a></code>, que deberás cambiar por la URL de tu repositorio forkeado.</p>
+<p>Hasta ahora nos estamos basando en el proyecto <em>PetClinic</em> original (genéricamente llamado <em>upstream</em>) disponible en <a href="https://github.com/spring-projects/spring-petclinic">GitHub</a>. En esta sección necesitarás poder hacer cambios sobre el mismo: básicamente vamos a añadir al proyecto un archivo <code>Dockerfile</code> y un archivo <code>Jenkinsfile</code>. Así que debes crear un <em>fork</em> y trabajar con tu <em>fork</em> a partir de ahora. Verás que en los bloques de código de este documento indica como URL del repositorio <code><a href="https://github.com/ualcnsa/spring-petclinic.git" class="bare">https://github.com/ualcnsa/spring-petclinic.git</a></code>, que deberás cambiar por la URL de tu fork.</p>
 </div>
 </td>
 </tr>
@@ -3109,7 +3139,7 @@ RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Container Registry era hasta ahora el servicio de Google Cloud para el registro de contenedores, pero ha sido reemplazado por Artifact Registry. Aunque Container Registry sigue funcionando, se recomienda usar Artifact Registry.</p>
+<p>Container Registry era hasta ahora el servicio de Google Cloud para el registro de contenedores, pero ha sido reemplazado por Artifact Registry. Aunque Container Registry sigue funcionando, se recomienda usar Artifact Registry. Si deseas ampliar información, consulta la <a href="https://cloud.google.com/artifact-registry/docs/transition/transition-from-gcr?hl=es-419">Transición desde Container Registry</a></p>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
@@ -3122,8 +3152,26 @@ RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no
 </table>
 </div>
 <div class="paragraph">
-<p><a href="https://cloud.google.com/container-registry/docs/advanced-authentication">Authentication</a> permite conectar al Registro de Contenedores con tus credenciales, y  hacer push y pull de imágenes. Para ello debes configurar los los permisos necesarios para accdeder al registro, utilizando un  <a href="https://cloud.google.com/container-registry/docs/advanced-authentication#json-key">JSON key file</a> como método de autenticación:</p>
+<p>La <a href="https://cloud.google.com/artifact-registry/docs/docker/authentication">autenticación para Docker</a> de Artifact Registry permite conectar al registro de contenedores con tus credenciales, y hacer <code>push</code> y <code>pull</code> de tus imágenes. Existen varios <a href="https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es-419#methods">métodos de autenticacion</a>, vamos a usar la <a href="https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es-419#json-key">clave de cuenta de servicio</a>.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Clave de cuenta de servicio: Es un par de claves administrado por el usuario que puedes usar como credencial para una cuenta de servicio. Debido a que la credencial es de larga duración, es la opción menos segura de todos los métodos de autenticación disponibles.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Configura los permisos necesarios para acceder al registro utilizando una <a href="https://cloud.google.com/artifact-registry/docs/docker/authentication?hl=es#json-key">clave de cuenta de servicio (JSON key file)</a> como método de autenticación:</p>
 <div class="ulist">
 <ul>
 <li>
@@ -3136,13 +3184,13 @@ RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no
 <p>Seleccionar <code>Crear cuenta de servicio</code>.</p>
 </li>
 <li>
-<p>Darle un nombre (p.e. <code>container-registry</code>)</p>
+<p>Darle un nombre (p.e. <code>artifact-registry</code>)</p>
 </li>
 <li>
 <p>Seleccionar "Crear y continuar".</p>
 </li>
 <li>
-<p>En el paso <code>Conceder a esta cuenta de servicio acceso al proyecto</code> del asistente, seleccionar el rol <code>Cloud Storage &#8594; Administrador de almacenamiento</code>. Continuar y Listo.</p>
+<p>En el paso <code>Conceder a esta cuenta de servicio acceso al proyecto</code> del asistente, seleccionar el rol <code>Administrador de Artifact Registry</code>. Continuar y Listo.</p>
 </li>
 <li>
 <p>Editar la Cuenta de servicio. En la sección <code>Claves</code> seleccionar <code>Agregar clave | Crear nueva clave</code>.</p>
@@ -3155,11 +3203,8 @@ RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no
 </li>
 </ul>
 </div>
-<div class="imageblock text-center thumb">
-<div class="content">
-<img src="modules/java-web-app/images/cloud-containers-registry-key-create.png" alt="cloud containers registry key create">
-</div>
-<div class="title">Fig. 67. Creación Service Account Key for pull/push on Container Registry</div>
+</li>
+</ol>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="2">
@@ -3186,83 +3231,160 @@ RUN mvn -B -f ./pom.xml -s /usr/share/maven/ref/settings-docker.xml package --no
 <ol class="arabic" start="3">
 <li>
 <p><em>Use the service account key as your password to authenticate with Docker.</em> Sustituye <code>keyfile.json</code> por el nombre de tu archivo de credenciales:</p>
-<div class="olist loweralpha">
-<ol class="loweralpha" type="a">
-<li>
-<p>En Linux:</p>
-</li>
-</ol>
-</div>
 </li>
 </ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">cat keyfile.json | docker login -u _json_key --password-stdin https://gcr.io</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">cat keyfile.json | docker login -u _json_key --password-stdin https://LOCATION-docker.pkg.dev <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
-<div class="olist loweralpha">
-<ol class="loweralpha" type="a" start="2">
-<li>
-<p>En Windows:</p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">docker login -u _json_key --password-stdin https://gcr.io &lt; keyfile.json</code></pre>
-</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>LOCATION</code> es la ubicación regional o multirregional del repositorio en el que se almacena la imagen. Por ejemplo, <code>us-east1</code> para la región Este de Estados Unidos (<em>recomendado</em>). Para otras localizaciones, consulta las <a href="https://cloud.google.com/artifact-registry/docs/repositories/repo-locations?hl=es-419">Ubicaciones de Artifact Registry</a></td>
+</tr>
+</table>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
-<img src="modules/java-web-app/images/cloud-containers-registry-login.png" alt="cloud containers registry login">
+<img src="modules/java-web-app/images/cloud-containers-registry-login-2024.png" alt="cloud containers registry login 2024">
 </div>
-<div class="title">Fig. 68. Autenticación de Docker contra Container Registry</div>
+<div class="title">Fig. 67. Autenticación de Docker contra Container Registry</div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_publicación_y_despliegue_manual">9.3. Publicación y despliegue <em>manual</em></h3>
+<h3 id="_activación_de_la_api_y_creación_del_repositorio">9.3. Activación de la API y creación del repositorio</h3>
+<div class="paragraph">
+<p>Para poder publicar la imagen en Artifact Registry, primero debemos activar la API de Artifact Registry en nuestro proyecto GCP, y luego crear un repositorio en el que almacenar la imagen del contenedor.</p>
+</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Construir el contenedor con el nombre completo incluyendo la referencia a Container registry (gcr.io). Primero definimos una variable de entorno con el nombre de nuestro proyecto GCP, y luego construimos de nuevo la imagen con el nombre completo del registro de contenedores:</p>
+<p>Habilita la API de Artifact Registry en tu proyecto GCP, accediendo a la URL <a href="https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com">https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com</a> y habilitando la API.</p>
 </li>
 </ol>
 </div>
-<div class="listingblock">
+<div class="imageblock text-center thumb">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
-
-docker build -t gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .</code></pre>
+<img src="modules/java-web-app/images/artifact-registry-habilitar-api-2024.png" alt="artifact registry habilitar api 2024" width="80%">
 </div>
+<div class="title">Fig. 68. Habilitar la API Container Registry</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="2">
 <li>
-<p>A continuación vamos a publicar con <code>docker push</code>: habilita la API de Container Registry en tu proyecto GCP, accediendo en el menú a Container Registry &gt; Images:</p>
+<p>Crea un <strong>nuevo repositorio</strong> para almacenar las imágenes de Docker:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Abre la página <a href="https://console.cloud.google.com/artifacts">Repositorios</a> en la consola de Google Cloud.</p>
+</li>
+<li>
+<p>Haz clic en Crear repositorio.</p>
+</li>
+</ul>
+</div>
 </li>
 </ol>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
-<img src="modules/java-web-app/images/container-registry-habilitar-api.png" alt="container registry habilitar api">
+<img src="modules/java-web-app/images/artifact-registry-crea-repositorio-2024.png" alt="artifact registry crea repositorio 2024" width="80%">
 </div>
-<div class="title">Fig. 69. Habilitar la API Container Registry</div>
+<div class="title">Fig. 69. Haz clic en Crear repositorio.</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Especifica <code>docker-repo</code> como el nombre del repositorio.</p>
+</li>
+<li>
+<p>Elige <code>Docker</code> como formato y <code>Estándar</code> como modo.</p>
+</li>
+<li>
+<p>En Tipo de ubicación, selecciona <code>Región</code> y, luego, elige la ubicación <code>us-east1</code>.</p>
+</li>
+<li>
+<p>En la sección Encriptación, deja la opción predeterminada: Clave administrada por Google. Deja las opciones predeterminadas en el resto de opciones.</p>
+</li>
+<li>
+<p>Haz clic en Crear.</p>
+</li>
+</ul>
+</div>
+<div class="imageblock text-center thumb">
+<div class="content">
+<img src="modules/java-web-app/images/artifact-registry-repo-creado-2024.png" alt="artifact registry repo creado 2024" width="80%">
+</div>
+<div class="title">Fig. 70. Repositorio Docker creado</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_publicación_de_la_imagen_en_el_repositorio">9.4. Publicación de la imagen en el repositorio</h3>
+<div class="paragraph">
+<p>Antes de enviar la imagen de Docker a Artifact Registry, debes crearla con el nombre del repositorio, o bien simplemente etiquetarla si ya la has creado previamente.</p>
 </div>
 <div class="olist arabic">
-<ol class="arabic" start="3">
+<ol class="arabic">
 <li>
-<p>Publica la imagen con <code><code>docker push [HOSTNAME]/[PROJECT-ID]/[IMAGE]:[TAG]</code></code>:</p>
+<p>Construye o etiqueta la imagen: Para construir la imagen:</p>
 </li>
 </ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">docker push gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">docker build -t us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0 .</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>O bien, para etiquetar la imagen ya existente:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">docker tag petclinic-docker:latest us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>En ambos casos, el nombre de la imagen está compuesto por varios elementos:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>us-east1</code> es la ubicación del repositorio.</p>
+</li>
+<li>
+<p><code>docker.pkg.dev</code> es el nombre de host para el repositorio de Docker que creaste.</p>
+</li>
+<li>
+<p><code>PROJECT</code> es el nombre del proyecto de Google Cloud, escribe lo que corresponda.</p>
+</li>
+<li>
+<p><code>docker-repo</code> es el nombre del repositorio que creaste.</p>
+</li>
+<li>
+<p><code>petclinic</code> es el nombre de imagen que deseas usar en el repositorio. El nombre de la imagen puede ser diferente del nombre de la imagen local.</p>
+</li>
+<li>
+<p><code>1.0</code> es la etiqueta que agregas a la imagen de Docker. Si no especificaste una etiqueta, Docker aplicará la etiqueta predeterminada <code>latest</code>.</p>
+</li>
+</ul>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="2">
+<li>
+<p>Publica la imagen con <code>docker push</code>:</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">docker push us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0</code></pre>
 </div>
 </div>
 <div class="olist arabic">
-<ol class="arabic" start="4">
+<ol class="arabic" start="3">
 <li>
 <p>Comprueba que se ha publicado correctamente.</p>
 </li>
@@ -3270,35 +3392,38 @@ docker build -t gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0 .</code></pre>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
-<img src="modules/java-web-app/images/container-registry-pushed-petclinic.png" alt="container registry pushed petclinic">
+<img src="modules/java-web-app/images/artifact-registry-imagen-pushed-2024.png" alt="artifact registry imagen pushed 2024" width="80%">
 </div>
-<div class="title">Fig. 70. Lista de imágenes en Container Registry</div>
+<div class="title">Fig. 71. Lista de imágenes en Container Registry</div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_despliegue_manual_del_contenedor">9.5. Despliegue <em>manual</em> del contenedor</h3>
 <div class="paragraph">
-<p>La imagen del contenedor PetClinic ya está disponible en el registro privado de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer <code>docker pull</code> de dicha imagen para descargarla en cualquier máquina con docker, y ejecutarlo con <code>docker run</code>.</p>
+<p>La imagen del contenedor PetClinic ya está disponible de manera <em>privada</em> en el repositorio de Docker de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer <code>docker pull</code> de dicha imagen para descargarla en cualquier máquina y ejecutarla con <code>docker run</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">GOOGLE_CLOUD_PROJECT=cnsa-2022-user123
+<pre class="highlight"><code class="language-bash" data-lang="bash">docker pull us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0
 
-docker run -p 8080:8080 -t --name petclinic  gcr.io/$GOOGLE_CLOUD_PROJECT/petclinic:1.0</code></pre>
+docker run -p 8080:8080 -t --name petclinic  us-east1-docker.pkg.dev/PROJECT/docker-repo/petclinic:1.0</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Si conectas a la instancia de despliegue que creamos al principio de esta actividad, y ejecutas el comando <code>docker run</code> anterior, dará un error de autenticación:</p>
+<p>Si conectas a la <strong>instancia de despliegue</strong> que creamos al principio de esta actividad, y ejecutas los comandos <code>docker pull</code> o <code>docker run</code> anteriores, dará un <strong>error de autenticación</strong>:</p>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
 <img src="modules/java-web-app/images/docker-run-petclinic-webapp-error-authentication.png" alt="docker run petclinic webapp error authentication">
 </div>
-<div class="title">Fig. 71. Error de autenticación en Container Registry</div>
+<div class="title">Fig. 72. Error de autenticación en Container Registry</div>
 </div>
 <div class="paragraph">
 <p>Para arreglarlo, habrá que copiar en la máquina de despliegue el archivo de credenciales <code>.json</code> con premisos sobre Container Registry. A continuación se muestran los comandos necesarios para ello. Una vez disponible este archivo en la instancia de despliegue ejecutar el comando <code>docker login</code> y tras ello ya si podremos hacer <code>docker pull</code> y <code>docker run</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash"># Compiamos el archivo de credenciales
+<pre class="highlight"><code class="language-bash" data-lang="bash"># Copiamos el archivo de credenciales
 scp ./secret/file.json ubuntu@DNS_MAQUINA_DEPLOY:~/keyfile.json
 # Conectamos a la máquina de despliegue
 ssh ubuntu@DNS_MAQUINA_DEPLOY
@@ -3358,7 +3483,7 @@ petclinic</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_integración_y_despliegue_continuo">9.4. Integración y despliegue continuo</h3>
+<h3 id="_integración_y_despliegue_continuo">9.6. Integración y despliegue continuo</h3>
 <div class="paragraph">
 <p>Hasta ahora hemos realizado todos los pasos de construcción, prueba y despliegue manualmente. A continuación, vamos a automatizar en Jenkins todo el proceso, cuyas principales tareas son:</p>
 </div>
@@ -3386,7 +3511,7 @@ petclinic</code></pre>
 <p>Definimos un nuevo proyecto en Jenkins de tipo pipeline, con el nombre <code><code>PetClinic-Docker-abc123</code></code> sustituyendo abc123 por nuestro nombre de usuario. Son necesarios 3 fases (stages) en el pipeline: <em>build image</em>, <em>push image</em>, y <em>deploy container</em>.</p>
 </div>
 <div class="sect3">
-<h4 id="_construcción_y_despliegue_del_contenedor">9.4.1. Construcción y despliegue del contenedor</h4>
+<h4 id="_construcción_y_despliegue_del_contenedor">9.6.1. Construcción y despliegue del contenedor</h4>
 <div class="paragraph">
 <p>Comenzamos por la <strong>construcción de la imagen</strong>:</p>
 </div>
@@ -3488,7 +3613,7 @@ petclinic</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_publicación_en_el_registro">9.4.2. Publicación en el registro</h4>
+<h4 id="_publicación_en_el_registro">9.6.2. Publicación en el registro</h4>
 <div class="paragraph">
 <p>El siguiente paso es <strong>publicar la imagen</strong> en el registro.</p>
 </div>
@@ -3516,7 +3641,7 @@ petclinic</code></pre>
 <div class="content">
 <img src="modules/java-web-app/images/jenkins-credentials-container-registry.png" alt="jenkins credentials container registry">
 </div>
-<div class="title">Fig. 72. Credenciales en Jenkins para Container Registry</div>
+<div class="title">Fig. 73. Credenciales en Jenkins para Container Registry</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="2">
@@ -3546,11 +3671,11 @@ petclinic</code></pre>
 <div class="content">
 <img src="modules/java-web-app/images/jenkins-published-container-registry.png" alt="jenkins published container registry">
 </div>
-<div class="title">Fig. 73. Imagen publicada en Container Registry, etiquetada con el número de build</div>
+<div class="title">Fig. 74. Imagen publicada en Container Registry, etiquetada con el número de build</div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_despliegue_en_producción">9.4.3. Despliegue en producción</h4>
+<h4 id="_despliegue_en_producción">9.6.3. Despliegue en producción</h4>
 <div class="paragraph">
 <p>Por último, quedaría el paso de <strong>desplegar al entorno de producción</strong>. Una vez empaquetada como un contenedor, Google Cloud permite desplegar de varias formas:</p>
 </div>
@@ -3636,7 +3761,7 @@ petclinic</code></pre>
 <div class="content">
 <img src="modules/java-web-app/images/jenkins-proceed-to-deploy-production.png" alt="jenkins proceed to deploy production">
 </div>
-<div class="title">Fig. 74. Proceed deploy to production?</div>
+<div class="title">Fig. 75. Proceed deploy to production?</div>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -3710,7 +3835,7 @@ docker rmi $(docker images -q)</code></pre>
 <div class="content">
 <img src="modules/java-web-app/images/jenkins-petclinic-full-pipeline-proceed.png" alt="jenkins petclinic full pipeline proceed">
 </div>
-<div class="title">Fig. 75. Input message (paso comentado en el ejemplo)</div>
+<div class="title">Fig. 76. Input message (paso comentado en el ejemplo)</div>
 </div>
 <div class="paragraph">
 <p>El pipeline completo, con todas sus fases, debe quedar así:</p>
@@ -3719,7 +3844,7 @@ docker rmi $(docker images -q)</code></pre>
 <div class="content">
 <img src="modules/java-web-app/images/jenkins-petclinic-full-pipeline.png" alt="jenkins petclinic full pipeline">
 </div>
-<div class="title">Fig. 76. Pipeline completo</div>
+<div class="title">Fig. 77. Pipeline completo</div>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -3884,7 +4009,7 @@ Tras clonar tu <em>fork</em> a local, haz checkout del tag <code>v0.1</code> en 
 <div class="content">
 <img src="modules/node-app/images/node-files-initial-point.png" alt="node files initial point">
 </div>
-<div class="title">Fig. 77. Archivos y carpetas en el estado inicial</div>
+<div class="title">Fig. 78. Archivos y carpetas en el estado inicial</div>
 </div>
 </td>
 </tr>
@@ -4042,7 +4167,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/node-jest-passed.png" alt="node jest passed">
 </div>
-<div class="title">Fig. 78. npm test</div>
+<div class="title">Fig. 79. npm test</div>
 </div>
 <div class="paragraph">
 <p>Si todo funciona correctamenente, haz <strong>commit</strong> y <strong>push</strong> de tu rama.</p>
@@ -4100,7 +4225,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-node-pipeline1.png" alt="jenkins node pipeline1">
 </div>
-<div class="title">Fig. 79. Nodeapp pipeline</div>
+<div class="title">Fig. 80. Nodeapp pipeline</div>
 </div>
 <div class="paragraph">
 <p>La evolución de las métricas del proyecto es uno de los indicadores que habitualmente muestra Jenkins como <em>feedback</em> para los desarrolladores. Vamos a <strong>publicar los resultados de los test</strong> en un gráfico.</p>
@@ -4198,7 +4323,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-nodeapp-pipeline-test-result-trend.png" alt="jenkins nodeapp pipeline test result trend">
 </div>
-<div class="title">Fig. 80. Publicado el gráfico de tendencia de los test</div>
+<div class="title">Fig. 81. Publicado el gráfico de tendencia de los test</div>
 </div>
 </div>
 <div class="sect2">
@@ -4225,7 +4350,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-webhook-github.png" alt="jenkins webhook github">
 </div>
-<div class="title">Fig. 81. Nuevo Webhook</div>
+<div class="title">Fig. 82. Nuevo Webhook</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="3">
@@ -4238,7 +4363,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-webhook-build-triger.png" alt="jenkins webhook build triger">
 </div>
-<div class="title">Fig. 82. Activar el Webhook en build trigers</div>
+<div class="title">Fig. 83. Activar el Webhook en build trigers</div>
 </div>
 <div class="paragraph">
 <p>A partir de ahora, cuando el repositorio en GitHub reciba un push notificará a Jenkins para que lance la construcción automáticamente.</p>
@@ -4280,7 +4405,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/node-jest-coverage-jenkins-ok.png" alt="node jest coverage jenkins ok">
 </div>
-<div class="title">Fig. 83. Ejecución de cobertura</div>
+<div class="title">Fig. 84. Ejecución de cobertura</div>
 </div>
 <div class="paragraph">
 <p>Como resultado, en la carpeta <code>coverage</code> del proyecto se ha generado el informe de cobertura.</p>
@@ -4289,13 +4414,13 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/node-mocha-coverage-results.png" alt="node mocha coverage results" width="160">
 </div>
-<div class="title">Fig. 84. Informe de cobertura</div>
+<div class="title">Fig. 85. Informe de cobertura</div>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
 <img src="modules/node-app/images/node-jest-coverage-index.png" alt="node jest coverage index">
 </div>
-<div class="title">Fig. 85. Informe de cobertura en html</div>
+<div class="title">Fig. 86. Informe de cobertura en html</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="2">
@@ -4359,7 +4484,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-node-coverage-report-link.png" alt="jenkins node coverage report link">
 </div>
-<div class="title">Fig. 86. Enlace al informe de cobertura en html</div>
+<div class="title">Fig. 87. Enlace al informe de cobertura en html</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="3">
@@ -4378,7 +4503,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/maven-script-console-site.png" alt="maven script console site">
 </div>
-<div class="title">Fig. 87. Script Console: permisos para visualizar el informe de cobertura</div>
+<div class="title">Fig. 88. Script Console: permisos para visualizar el informe de cobertura</div>
 </div>
 <div class="paragraph">
 <p>Tras ello ya podrás visualizar correctamente el informe de cobertura. Pero ten en cuenta que cada vez que reinicies Jenkins esta configuración  se pierde y vuelve a la configuración predeterminada.</p>
@@ -4429,7 +4554,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/eslint-init.png" alt="eslint init">
 </div>
-<div class="title">Fig. 88. ESLint init</div>
+<div class="title">Fig. 89. ESLint init</div>
 </div>
 <div class="paragraph">
 <p>Se habrá creado un archivo <code>.eslintrc.json</code>, que incluirá esta línea:</p>
@@ -4555,7 +4680,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/eslint-jenkins-link.png" alt="eslint jenkins link">
 </div>
-<div class="title">Fig. 89. Enlace al informe <em>ESLint</em></div>
+<div class="title">Fig. 90. Enlace al informe <em>ESLint</em></div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="7">
@@ -4571,7 +4696,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/eslint-jenkins-pass-grapth.png" alt="eslint jenkins pass grapth">
 </div>
-<div class="title">Fig. 90. Fase <em>ESLint</em> <em>passed</em></div>
+<div class="title">Fig. 91. Fase <em>ESLint</em> <em>passed</em></div>
 </div>
 </div>
 <div class="sect2">
@@ -4795,7 +4920,7 @@ npm-debug.log</pre>
 <div class="content">
 <img src="modules/node-app/images/docker-login-done.png" alt="docker login done">
 </div>
-<div class="title">Fig. 91. Comprobar docker login</div>
+<div class="title">Fig. 92. Comprobar docker login</div>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -4839,7 +4964,7 @@ docker tag  &lt;your username&gt;/nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/docker-tag-nodeapp.png" alt="docker tag nodeapp">
 </div>
-<div class="title">Fig. 92. Imagen etiquetada</div>
+<div class="title">Fig. 93. Imagen etiquetada</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="4">
@@ -4864,7 +4989,7 @@ docker tag  &lt;your username&gt;/nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/container-registry-pushed-nodeapp.png" alt="container registry pushed nodeapp">
 </div>
-<div class="title">Fig. 93. Lista de imágenes en Container Registry</div>
+<div class="title">Fig. 94. Lista de imágenes en Container Registry</div>
 </div>
 <div class="paragraph">
 <p>La imagen del contenedor <strong>nodeapp</strong> ya está disponible en el registro privado de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer <code>docker pull</code> de dicha imagen para descargarla en cualquier máquina con docker, y ejecutarlo con <code>docker run</code>.</p>
@@ -5066,7 +5191,7 @@ docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/jenkins-published-nodeapp-container-registry.png" alt="jenkins published nodeapp container registry">
 </div>
-<div class="title">Fig. 94. Imagen publicada en Container Registry, etiquetada con el número de build</div>
+<div class="title">Fig. 95. Imagen publicada en Container Registry, etiquetada con el número de build</div>
 </div>
 <div class="paragraph">
 <p>Por último, quedaría el paso de <strong>desplegar al entorno de producción</strong>: la máquina virtual de despliegue.</p>
@@ -5165,7 +5290,7 @@ docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/jenkins-nodeapp-full-pipeline.png" alt="jenkins nodeapp full pipeline">
 </div>
-<div class="title">Fig. 95. Pipeline completo</div>
+<div class="title">Fig. 96. Pipeline completo</div>
 </div>
 <div class="sidebarblock">
 <div class="content">
@@ -5196,7 +5321,7 @@ docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-03-13 13:55:27 +0100
+Last updated 2024-03-28 14:46:24 +0100
 </div>
 </div>
 </body>

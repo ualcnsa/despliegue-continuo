@@ -87,9 +87,9 @@ docker image ls
 image::docker-image-ls.png[role="thumb", align="center"]
 
 
-== Publicación en Google Container Registry
+== Publicación de la imagen en un registro de contenedores
 
-Opcionalmente podemos publicar nuestra imagen personalizada en DockerHub, o alternativamente el Google Container Registry. Más adelante se describirá cómo hacerlo.
+Opcionalmente podemos publicar nuestra imagen personalizada en DockerHub, o alternativamente el Google Container Registry (_deprecado_) o en Google Artifact Registry. Más adelante se describirá cómo hacerlo.
 
 == Ejecución del contenedor de Jenkins
 

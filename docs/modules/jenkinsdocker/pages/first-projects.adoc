@@ -110,7 +110,7 @@ A continuación creamos el segundo proyecto de Jenkins tipo pipeline. Vamos a da
 pipeline {
     agent {
         docker {
-            image 'maven:3.9-eclipse-temurin-21-jammy' <1>
+            image 'maven:3.9-eclipse-temurin-21-alpine' <1>
             args '-v $HOME/.m2:/root/.m2' <2>
         }
     }
@@ -129,6 +129,8 @@ pipeline {
 <1> Elige entre las https://hub.docker.com/_/maven[imágenes de Maven] disponibles. En este caso, se ha elegido la versión 3.9 con Java 21, que es distinta a la que hemos instalado en el nodo principal.
 <2> Mapea el volumen del host `$HOME/.m2` donde se almacenan las dependencias de Maven, para que estén disponibles en el contenedor, eliminando así la necesidad de volver a descargarlas en sucesivas ejecuciones.
 
+[WARNING]
+====
 Te dará error al construir el proyecto. 
 [source,bash,subs="verbatim,quotes"]
 ----
@@ -142,6 +144,8 @@ El motivo es que en la máquina Jenkins, sobre el S.O. host, hay que abrir permi
 ```
 sudo chmod 666 /var/run/docker.sock
 ```
+====
+
 Tras ello deben construirse correctamente. La nueva salida será algo así: 
 
 [source,bash,subs="verbatim,quotes"]
@@ -203,7 +207,7 @@ pipeline {
         stage('Back-end') {
             agent {
                 docker { 
-                    image 'maven:3.9-eclipse-temurin-21-jammy'
+                    image 'maven:3.9-eclipse-temurin-21-alpine'
                     args '-v $HOME/.m2:/root/.m2'
                 }
             }

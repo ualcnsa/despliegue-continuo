@@ -35,7 +35,7 @@ Codificación, idioma, tabla de contenidos, tipo de documento
 :example-caption!: 
 
 
-:page-component-display-version: 0.22.2
+:page-component-display-version: 0.24.0
 
 // :leveloffset: 1
 

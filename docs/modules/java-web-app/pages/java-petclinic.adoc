@@ -8,9 +8,12 @@ En este primer ejemplo en Java, nos vamos a basar en el proyecto PetClinic con S
 
 https://spring.io/projects/spring-boot[Spring Boot] es un framework de código abierto para el desarrollo de aplicaciones Java basadas en https://spring.io/[Spring]. Spring Boot genera una proyecto Maven/Gradle con todo lo necesario y que se autoconfigura en el arranque. Por ejemplo, si decimos que queremos una aplicación web, Spring Boot automáticamente embebe un Tomcat y lo configura con el servlet de Spring. Toda la configuración la añade al archivo de la herramienta de __build__ que indiquemos, en caso de Maven, al archivo *`pom.xml`*.
 
+[INFORMATION]
+====
 Recordemos que *Maven* es una herramienta software para la gestión y construcción de proyectos Java. https://maven.apache.org/[Apache Maven] estandariza la configuración de un proyecto en todo su ciclo de vida, como son todas las fases de compilación, ejecución de pruebas, empaquetado, etc. Maven permite la gestión de dependencias entre módulos y distintas versiones de librerías, simplemente indicando los módulos que componen el proyecto, y las dependencias utiliza el software que estamos desarrollando, en un fichero XML de configuración llamado POM (Project Object Model).
+====
 
-Para el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el `.jar` (empaquetado) y ejecutarlo:
+Para ejecutar el proyecto PetClinic, en tu máquina de desarrollo local puedes construir el `.jar` (empaquetado) y ejecutarlo:
 [IMPORTANT]
 ====
 Requiere JDK 11 o superior en la máquina local. Si estás en Windows y tienes varias instalaciones, https://www.happycoders.eu/java/how-to-switch-multiple-java-versions-windows/[establece la version de Java] predeterminada.
@@ -32,7 +35,7 @@ java -jar target/*.jar <2>
 .Página principal de PetClinic
 image::petclinic-homepage.png[role="thumb", align="center"]
 
-En su configuración predeterminada, Petclinic utiliza una base de datos en memoria (H2) que se inicia con datos predeterminados, y los nuevos datos que se guarden se pierden al reiniciar la aplicación. 
+En su configuración predeterminada, Petclinic utiliza una base de datos en memoria (http://www.h2database.com/html/main.html[H2]) que se inicia con datos predeterminados, y los nuevos datos que se guarden se pierden al reiniciar la aplicación. 
 
 En caso de necesitar persistencia de los datos, PetClinic también está preconfigurada para usar MySql. Para cambiar el tipo de base de datos, la aplicación debe ejecutarse con un perfil de MySql: `spring.profiles.active=mysql`.
 
@@ -55,7 +58,7 @@ El archivo `docker-compose.yml` que permite iniciar MySql y Postgres puedes cons
 Si abres el repositorio de PetClinic con VS Code, verás que el IDE te sugiere abrir el proyecto en un entorno https://code.visualstudio.com/docs/devcontainers/containers[_Dev Containers_]. Esto *no es necesario*, puedes cerrar el aviso.
 
 .Aviso Dev Containers en Visual Studio Code
-image::vscode-devcontainer-banner.png[role="thumb", align="center"]
+image::vscode-devcontainer-banner.png[role="thumb", align="center", width="60%"]
 
 Pero si aceptas, se descargará una imagen de Docker con un entorno de desarrollo preconfigurado para trabajar con el proyecto, así como las imágenes de MySql y Postgres. En ese caso, al lanzar la construcción del proyecto, los tests de integración se ejecutan sobre las bases de datos MySql y Postgres.
 ====
@@ -107,11 +110,11 @@ pipeline {
 }
 ----
 
-<1> agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, `any` indica que se ejecutará cualquier nodo, en nuestro caso será en el nodo _principal (_master_) ya que es el único que hay definido.
-<2> como herramienta para la construcción se usará maven. Pon aquí el nombre que diste a tu instalación de Maven configurada previamente en Tools Configuration. 
+<1> agente o nodo de Jenkins en que ejecuta la construcción del proyecto. En el ejemplo, `any` indica que se ejecutará cualquier nodo, en nuestro caso será en el nodo _principal_ (_main_) ya que es el único que hay definido.
+<2> como herramienta para la construcción se usará Naven. Pon aquí el *nombre* que diste a tu instalación de Maven configurada previamente en _Tools Configuration_. 
 <3> Bloque de `stages`: fases o etapas que conforman el pipeline
 <4> Fase de descarga del repositorio git
-<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realizarán con los __goals__ `clean package`: primero `clean` elimina todo lo generado en la construcción anterior que se encuentra en la carpeta `target`, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opción `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
+<5> Fase de compilación, ejecución de test y empaquetado de la aplicación. Se realiza con los _goals_ de Maven `clean package`: primero `clean` elimina todo lo generado en la construcción anterior que se encuentra en la carpeta `target`, y a continuación se lanza la construcción con `package` tal y como está definida en el archivo `pom.xml`. La opción `-Dcheckstyle.skip` anula el análisis de CheckStyle, que lo añadiremos en una fase posterior.
 <6> Paso posterior que guarda los resultados de los test de JUnit para generar la gráfica de evolución de los test.
 <7> La opción `-Dtest=!PostgresIntegrationTests*` excluye la ejecución de los tests de integración con Postgres, ya que estos fallan en Jenkins porque hay algún problema con el contenedor de Postgres que se inicia en la construcción del proyecto.
 
@@ -124,13 +127,13 @@ Si realizamos una segunda ejecución, ya aparecerá la gráfica de evolución de
 
 [NOTE]
 ====
-Alternativamente, podemos hacer que la construcción se realice en un agente que sea un contenedor docker:
+Alternativamente, podemos hacer que la construcción se realice en un agente que sea un contenedor docker. Para ello, crea el siguiente pipeline de nombre `spring-petclinic-pipeline-agent-docker`:
 [source,groovy]
 ----
 pipeline {
    agent {
         docker { <1>
-            image 'maven:3.9-eclipse-temurin-17-focal'
+            image 'maven:3.9-eclipse-temurin-17-alpine'
             args '-v $HOME/.m2:/root/.m2'
         }
     } 
@@ -159,15 +162,15 @@ pipeline {
   }
 }
 ----
-<1> Agente donde construir el proyecto, ahora no se hace en el nodo principal sino en un contenedor docker seleccionado. La imagen de Maven que se utiliza es `maven:3.9-eclipse-temurin-17-focal`, y se monta el volumen del directorio `.m2` del usuario en el contenedor.
-
+<1> Agente donde construir el proyecto, ahora no se hace en el nodo principal sino en un contenedor docker seleccionado. La imagen de Maven que se utiliza es `maven:3.9-eclipse-temurin-17-alpine`, y se monta el volumen del directorio `.m2` del usuario en el contenedor. Se ha elegido la imagen de Maven con Java 17 y Alpine, que es una distribución de Linux muy ligera, en lugar de la imagen de Maven con Java 21 porque esta última da problemas con la creación del directorio `.m2` en el contenedor.
 ====
+
 == Informe de Cobertura de código
 
 Jenkins nos permite publicar métricas asociadas al proyecto. Una de ellas, es la cobertura de código ejecutado por las pruebas. 
 
 ****
-La *Cobertura* de código nos indica el porcentaje de código de producción que está siendo ejecutado por los test. Es deseable tener un valor de cobertura lo más próximo posible al 100%
+La https://es.wikipedia.org/wiki/Cobertura_de_c%C3%B3digo[*Cobertura de código*] nos indica el porcentaje de código de producción que está siendo ejecutado por los test. Es deseable tener un valor de cobertura lo más próximo posible al 100%
 ****
 
 El proyecto PetClinic contiene mas de 40 tests unitarios en JUnit, y está configurado (ver `pom.xml`) para que se calcule la cobertura cuando se lanzan los tests mediante el plugin JaCoCo (Java Code Coverage). Puedes visualizar el resultado de la cobertura en tu construcción local, en la carpeta `target/site/jacoco`: 
@@ -187,7 +190,7 @@ image::plugins-jacoco-class-details.png[role="thumb", align="center"]
 <3> Las líneas [red-background]#rojas# no están cubiertas, no han sido ejecutadas por ningún test.
 
 
-Para visualizar el resultado de la cobertura en Jenkins: 
+Para visualizar el resultado de la *cobertura en Jenkins*: 
 
 . Instala el plugin de JaCoCo y el plugin Coverage (si no lo habías hecho antes):
 
@@ -262,7 +265,7 @@ image::checkstyle-report-html-2024.png[role="thumb", align="center"]
 
 Sería labor del equipo de desarrollo revisar los errores detectados y tratar de corregirlos, siempre que realmente supongan una mejora para la calidad del código. 
 
-Para ejecutar y visualizar el informe en Jenkins: 
+Para ejecutar y visualizar el *informe de CheckStyle en Jenkins*: 
 
 . Instalar el plugin https://github.com/jenkinsci/warnings-ng-plugin/blob/master/doc/Documentation.md#declarative-pipeline-configuration[Warnings Next Generation].
 . Añadir al pipeline un nuevo `stage` con la siguiente descripción: 
