@@ -1,10 +1,10 @@
 ////
-// Ejemplo 2: Hola Mundo en NodeJs
+// Ejemplo 2: Hola Mundo en Node.js
 ////
 
 = _Hola mundo_ en Node.js
 
-A continuación se muestra un ejemplo de *integración y despliegue continuos en Jenkins de un proyecto NodeJs*. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología Node.js.
+A continuación se muestra un ejemplo de *integración y despliegue continuos en Jenkins de un proyecto Node.js*. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología Node.js.
 
 Al igual con el ejemplo anterior en Java, en primer lugar trabajaremos con la aplicación Node.js sin _dockerizar_, y después _dockerizaremos_ la aplicación. La mayoría de los pasos siempre los ejecutaremos primero en local, y tras comprobar que funcionan correctamente, los automatizaremos en Jenkins. 
 
@@ -14,7 +14,16 @@ La implementación de la integración y despliegue continuos permitirá que, par
 
 == Construcción y ejecución en local
 
-Nos vamos a basar en  el proyecto _HelloWorld_ en NodeJs, disponible en https://github.com/ualcnsa/nodeapp. Necesitarás poder hacer cambios sobre el mismo, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. 
+Nos vamos a basar en  el proyecto _HelloWorld_ en Node.js, disponible en https://github.com/ualcnsa/nodeapp. Necesitarás poder hacer cambios sobre el mismo, así que crea un _fork_ y trabaja con tu _fork_ a partir de ahora. 
+
+[IMPORTANT]
+====
+Al realizar el fork, no olvides quitar la marca `copy the master branch only`
+====
+
+.Fork del repo nodeapp
+image::fork-ualcnsa-nodeapp.png[role="thumb", align="center", width="80%"]
+
 Tras clonar tu _fork_ a local, haz checkout del tag `v0.1` en una nueva rama cuyo nombre sea tu usuario de la UAL, para que tus archivos estén en el estado inicial de este tutorial: 
 
  git checkout tags/v0.1 -b <branch> <1>
@@ -26,7 +35,7 @@ Veamos los archivos que componen la aplicación:
 . El archivo `package.json` contienen información básica de la aplicación y las dependencias: 
 
 - *express*: Node framework
-- *jest*: framework de testing para NodeJs (existen numerosos framework de testing en NodeJs, como Jasmine, Mocha, Tape, etc.)
+- *jest*: framework de testing para Node.js (existen numerosos framework de testing en Node.js, como Jasmine, Mocha, Tape, etc.)
 - *supertest*: proporciona abstracción a alto nivel para testing HTTP
 
 [source,json]
@@ -196,8 +205,8 @@ pipeline {
   agent any
     
   tools {
-    // In Global tools configuration, install Node configured as "nodejs"
-    nodejs "nodejs"
+    // In Global tools configuration, install Node configured as "Node.js"
+    Node.js "Node.js"
   }
     
   stages {
@@ -381,7 +390,7 @@ Instala el HTML Publisher plugin en Jenkins
 El resultado en Jenkins, debe aparece un enlace nuevo en el menú de la izquierda: 
 
 .Enlace al informe de cobertura en html
-image::jenkins-node-coverage-report-link.png[role="thumb", align="center"]
+image::jenkins-node-coverage-report-link-2024.png[role="thumb", align="center"]
 
 [start=3]
 . Para poder visualizar correctamente el _Coverage Report_, hay que cambiar la https://wiki.jenkins.io/display/JENKINS/Configuring+Content+Security+Policy#ConfiguringContentSecurityPolicy-TheDefaultRuleSet[configuración de seguridad] de Jenkins predeterminada, que es muy restrictiva para prevenir de archivos HTML/JS maliciosos que podrían instalarse como parte de un Plugin. Para modificar la configuración, abre la consola de scritps (_Manage Jenkins / Script Console_), y ejecuta estas líneas: 
@@ -461,7 +470,7 @@ module.exports = {
 ----
 
 [start=3]
-. Añade a `package.json` un script para `lint` y la dependencia a ESLint
+. Añade a `package.json` un script para `lint` y la dependencia a ESLint, y comprueba el resto de dependencias:
  
 [source,json]
 .package.json: lint y dependencia a ESLint
@@ -473,10 +482,10 @@ module.exports = {
    ...
    "devDependencies": {
       ...
-      "eslint": "^8.10.0",
-      "eslint-config-prettier": "^8.5.0",
-      "eslint-plugin-prettier": "^4.0.0",
-      "prettier": "^2.5.1",
+      "eslint": "^8.57.0",
+      "eslint-config-prettier": "^9.1.0",
+      "eslint-plugin-prettier": "^5.1.3",
+      "prettier": "^3.2.5",
    }
    ...
 ----
@@ -501,7 +510,7 @@ El parámetro `-s` se utiliza para que no muestre mensajes de error. Habrá gene
          always{
             // record lint issues found, also, fail the build if there are ANY NEW issues found
             recordIssues enabledForFailure: true,
-                blameDisabled: true,
+                // blameDisabled: true,
                 tools: [esLint(pattern: '**/eslint-result.xml')],
                 qualityGates: [[threshold: 1, type: 'NEW']]
         }
@@ -517,12 +526,16 @@ El parámetro `-s` se utiliza para que no muestre mensajes de error. Habrá gene
 image::eslint-jenkins-link.png[role="thumb", align="center"]
 
 [start=7]
-. No te preocupes si la fase de análisis que acabas de añadir falla (está en rojo). Es así porque cuando ESLint detecta un error, finaliza con error (`EXIT 1`). Si te fijas en el informe, los 2 errores detectados han sido en el archivo `test.js` (y pueden ser falsos positivos). Para evitarlo, elimina `test/*.js` del script `lint` en `package.json`.
+. No te preocupes si la fase de análisis que acabas de añadir falla (está en rojo). Es así porque cuando ESLint detecta un error, finaliza con error (`EXIT 1`).
+// Si te fijas en el informe, los 2 errores detectados han sido en el archivo `test.js` (y pueden ser falsos positivos).
+Para evitarlo, añade ` || true` al comando `sh` que se ejecuta en la fase de análisis:
+
+  sh 'npm run lint -s' || true
 
 Tras ello, la nueva ejecución del pipeline se ejecutará correctamente. 
 
-.Fase _ESLint_ _passed_
-image::eslint-jenkins-pass-grapth.png[role="thumb", align="center"]
+.Fase _ESLint_ 
+image::eslint-jenkins-pass-grapth-2024.png[role="thumb", align="center"]
 
 == Despliegue en la VM
 
@@ -531,45 +544,57 @@ Para desplegar la aplicación _hello world_ en la instancia de despliegue vamos 
 
 Recuerda que ya he hemos realizado una configuración previa sobre la instancia de despliegue, que constituyen los  *prerrequisitos* para esta sección: 
 
-- Con anterioridad ya instalamos NodeJS en la instancia de despliegue.
+- Con anterioridad ya instalamos Node.js en la instancia de despliegue.
 
 - También habíamos copiado la clave pública de despliegue para que Jenkins, que tiene la clave privada asociada, pueda hacer `ssh` y ejecutar comandos sobre ella.
 
 - Como requisito adicional, para ayudarnos a lanzar `npm start` desde Jenkins, como un proceso demonio en background, usaremos https://www.npmjs.com/package/forever[*forever*]. Debes instalar `forever` en la  instancia de despliegue: 
 
-    sudo npm install forever -g
+    npm install forever -g
 
 Una vez revisados los prerrequisitos, añade la fase de despliegue al pipeline en Jenkins:
 
-. Copia este nueva fase en tu pipeline, sustituyendo DEPLOY_MACHINE por el nombre DNS de tu instancia, y usa el nombre del repositorio git adecuado: 
+. Copia este nueva fase en tu pipeline, sustituyendo DNS_DEPLOY_INSTANCE por el nombre DNS de tu instancia (también puedes definirla como una variable de entorno), y usa el nombre del repositorio git adecuado: 
 
 [source,groovy]
 ----
+ environment {
+   DNS_DEPLOY_INSTANCE = "deploy.jenkinscnsa2024.tech" // "your-deploy-instance DNS"
+ }
+ ...
   stage('Deploy'){
     steps {
       sh '''
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "if [ ! -d 'nodeapp' ] ; then
-          git clone https://github.com/ualcnsa/nodeapp.git
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "if [ ! -d 'nodeapp' ] ; then
+          git clone https://github.com/MI_CUENTA/nodeapp.git
         else
           cd nodeapp
           git pull origin master
+          git checkout MI_RAMA
         fi" <1>
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "if pgrep node; then forever stopall; fi" <2>
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "cd nodeapp && npm install" <3>
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "cd nodeapp && PORT=8080 forever start index.js" <4>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.11.1/bin/ && if pgrep node; then forever stopall; fi" <2>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.11.1/bin/ && cd nodeapp && npm install" <3>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.11.1/bin/ && cd nodeapp && PORT=8080 forever start index.js" <4>
       '''
     }
   }
 ----
-<1> Clona el repositorio si no existe en la máquina de despliegue, si existe hace un `pull`
+<1> Clona el repositorio (tu fork) si no existe en la máquina de despliegue, si existe hace un `pull` y `checkout` de tu rama de trabajo.
 <2> Detiene la ejecución de `forever` si existe de un despliegue anterior, usando `forever stop`.
 <3> Instala las dependencias
 <4> Ejecuta la aplicación con `forever start` en el puerto `8080`, que ejecuta el proceso en background como demonio.
 
+[WARNING]
+====
+Revisa en la máquina de despliegue la ruta de node y npm con el comando `whereis node` y `whereis npm`, y modifica la ruta del PATH en el script si es necesario.
+
+====
+
+
 ****
 Referencias
 
-. https://codelabs.developers.google.com/codelabs/cloud-create-a-nodejs-vm/[Running Node.js on a Virtual Machine codelab]
+. https://codelabs.developers.google.com/codelabs/cloud-create-a-Node.js-vm/[Running Node.js on a Virtual Machine codelab]
 
 . https://medium.com/@mosheezderman/how-to-set-up-ci-cd-pipeline-for-a-node-js-app-with-jenkins-c51581cc783c[How to set up CI/CD Pipeline for a node.js app with Jenkins]
 

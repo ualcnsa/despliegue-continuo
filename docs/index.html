@@ -3854,7 +3854,7 @@ docker rmi $(docker images -q)</code></pre>
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">    stage('End-to-end Test on Production') {
         // Ideally, we would run some end-to-end tests against our running container.
         steps{
-            sh 'echo "End-to-end Tests passed on Production"'
+            sh "echo 'End-to-end Tests passed on Production'"
         }
     }</code></pre>
 </div>
@@ -3867,9 +3867,9 @@ docker rmi $(docker images -q)</code></pre>
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">    stage('Remove Unused docker image') {
       steps{
         // input message:"Proceed with removing image locally?" <i class="conum" data-value="1"></i><b>(1)</b>
-        sh 'if docker ps -q --filter name=petclinic | grep . ; then docker stop petclinic &amp;&amp; docker rm -fv petclinic; fi' <i class="conum" data-value="2"></i><b>(2)</b>
-        sh 'docker rmi ${IMAGE_NAME}:${env.BUILD_ID}' <i class="conum" data-value="3"></i><b>(3)</b>
-        sh 'docker rmi ${IMAGE_NAME}:latest'
+        sh "if docker ps -q --filter name=petclinic | grep . ; then docker stop petclinic &amp;&amp; docker rm -fv petclinic; fi"
+        sh "docker rmi ${IMAGE_NAME}:${env.BUILD_ID}"
+        sh "docker rmi ${IMAGE_NAME}:latest"
       }
     }</code></pre>
 </div>
@@ -3933,6 +3933,9 @@ docker rmi $(docker images -q)</code></pre>
 <li>
 <p><a href="https://community.jenkins.io/t/push-to-google-artifact-registry-through-jenkins-pipeline/7868/6">Push to Google Artifact Registry through Jenkins Pipeline</a> @ Jenkins Community</p>
 </li>
+<li>
+<p><a href="https://www.jenkins.io/doc/tutorials/build-a-java-app-with-maven/">Build a Java app with Maven</a> @ Jenkins.io Tutorials</p>
+</li>
 </ol>
 </div>
 </div>
@@ -3970,7 +3973,7 @@ docker rmi $(docker images -q)</code></pre>
 <h2 id="_hola_mundo_en_node_js">11. <em>Hola mundo</em> en Node.js</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A continuación se muestra un ejemplo de <strong>integración y despliegue continuos en Jenkins de un proyecto NodeJs</strong>. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología Node.js.</p>
+<p>A continuación se muestra un ejemplo de <strong>integración y despliegue continuos en Jenkins de un proyecto Node.js</strong>. Los pasos a realizar son similares al ejemplo anterior con Java, el decir, el pipeline tendrá las mismas fases; eso si, adaptaremos las ordenes o comandos a ejecutar a la tecnología Node.js.</p>
 </div>
 <div class="paragraph">
 <p>Al igual con el ejemplo anterior en Java, en primer lugar trabajaremos con la aplicación Node.js sin <em>dockerizar</em>, y después <em>dockerizaremos</em> la aplicación. La mayoría de los pasos siempre los ejecutaremos primero en local, y tras comprobar que funcionan correctamente, los automatizaremos en Jenkins.</p>
@@ -3985,8 +3988,30 @@ docker rmi $(docker images -q)</code></pre>
 <div class="sect2">
 <h3 id="_construcción_y_ejecución_en_local_2">11.1. Construcción y ejecución en local</h3>
 <div class="paragraph">
-<p>Nos vamos a basar en  el proyecto <em>HelloWorld</em> en NodeJs, disponible en <a href="https://github.com/ualcnsa/nodeapp" class="bare">https://github.com/ualcnsa/nodeapp</a>. Necesitarás poder hacer cambios sobre el mismo, así que crea un <em>fork</em> y trabaja con tu <em>fork</em> a partir de ahora.
-Tras clonar tu <em>fork</em> a local, haz checkout del tag <code>v0.1</code> en una nueva rama cuyo nombre sea tu usuario de la UAL, para que tus archivos estén en el estado inicial de este tutorial:</p>
+<p>Nos vamos a basar en  el proyecto <em>HelloWorld</em> en Node.js, disponible en <a href="https://github.com/ualcnsa/nodeapp" class="bare">https://github.com/ualcnsa/nodeapp</a>. Necesitarás poder hacer cambios sobre el mismo, así que crea un <em>fork</em> y trabaja con tu <em>fork</em> a partir de ahora.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Al realizar el fork, no olvides quitar la marca <code>copy the master branch only</code></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock text-center thumb">
+<div class="content">
+<img src="modules/node-app/images/fork-ualcnsa-nodeapp.png" alt="fork ualcnsa nodeapp" width="80%">
+</div>
+<div class="title">Fig. 78. Fork del repo nodeapp</div>
+</div>
+<div class="paragraph">
+<p>Tras clonar tu <em>fork</em> a local, haz checkout del tag <code>v0.1</code> en una nueva rama cuyo nombre sea tu usuario de la UAL, para que tus archivos estén en el estado inicial de este tutorial:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -4014,7 +4039,7 @@ Tras clonar tu <em>fork</em> a local, haz checkout del tag <code>v0.1</code> en 
 <p><strong>express</strong>: Node framework</p>
 </li>
 <li>
-<p><strong>jest</strong>: framework de testing para NodeJs (existen numerosos framework de testing en NodeJs, como Jasmine, Mocha, Tape, etc.)</p>
+<p><strong>jest</strong>: framework de testing para Node.js (existen numerosos framework de testing en Node.js, como Jasmine, Mocha, Tape, etc.)</p>
 </li>
 <li>
 <p><strong>supertest</strong>: proporciona abstracción a alto nivel para testing HTTP</p>
@@ -4062,7 +4087,7 @@ Tras clonar tu <em>fork</em> a local, haz checkout del tag <code>v0.1</code> en 
 <div class="content">
 <img src="modules/node-app/images/node-files-initial-point.png" alt="node files initial point">
 </div>
-<div class="title">Fig. 78. Archivos y carpetas en el estado inicial</div>
+<div class="title">Fig. 79. Archivos y carpetas en el estado inicial</div>
 </div>
 </td>
 </tr>
@@ -4220,7 +4245,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/node-jest-passed.png" alt="node jest passed">
 </div>
-<div class="title">Fig. 79. npm test</div>
+<div class="title">Fig. 80. npm test</div>
 </div>
 <div class="paragraph">
 <p>Si todo funciona correctamenente, haz <strong>commit</strong> y <strong>push</strong> de tu rama.</p>
@@ -4237,8 +4262,8 @@ describe("GET /John", () =&gt; {
   agent any
 
   tools {
-    // In Global tools configuration, install Node configured as "nodejs"
-    nodejs "nodejs"
+    // In Global tools configuration, install Node configured as "Node.js"
+    Node.js "Node.js"
   }
 
   stages {
@@ -4278,7 +4303,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-node-pipeline1.png" alt="jenkins node pipeline1">
 </div>
-<div class="title">Fig. 80. Nodeapp pipeline</div>
+<div class="title">Fig. 81. Nodeapp pipeline</div>
 </div>
 <div class="paragraph">
 <p>La evolución de las métricas del proyecto es uno de los indicadores que habitualmente muestra Jenkins como <em>feedback</em> para los desarrolladores. Vamos a <strong>publicar los resultados de los test</strong> en un gráfico.</p>
@@ -4376,7 +4401,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-nodeapp-pipeline-test-result-trend.png" alt="jenkins nodeapp pipeline test result trend">
 </div>
-<div class="title">Fig. 81. Publicado el gráfico de tendencia de los test</div>
+<div class="title">Fig. 82. Publicado el gráfico de tendencia de los test</div>
 </div>
 </div>
 <div class="sect2">
@@ -4403,7 +4428,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-webhook-github.png" alt="jenkins webhook github">
 </div>
-<div class="title">Fig. 82. Nuevo Webhook</div>
+<div class="title">Fig. 83. Nuevo Webhook</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="3">
@@ -4416,7 +4441,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/jenkins-webhook-build-triger.png" alt="jenkins webhook build triger">
 </div>
-<div class="title">Fig. 83. Activar el Webhook en build trigers</div>
+<div class="title">Fig. 84. Activar el Webhook en build trigers</div>
 </div>
 <div class="paragraph">
 <p>A partir de ahora, cuando el repositorio en GitHub reciba un push notificará a Jenkins para que lance la construcción automáticamente.</p>
@@ -4458,7 +4483,7 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/node-jest-coverage-jenkins-ok.png" alt="node jest coverage jenkins ok">
 </div>
-<div class="title">Fig. 84. Ejecución de cobertura</div>
+<div class="title">Fig. 85. Ejecución de cobertura</div>
 </div>
 <div class="paragraph">
 <p>Como resultado, en la carpeta <code>coverage</code> del proyecto se ha generado el informe de cobertura.</p>
@@ -4467,13 +4492,13 @@ describe("GET /John", () =&gt; {
 <div class="content">
 <img src="modules/node-app/images/node-mocha-coverage-results.png" alt="node mocha coverage results" width="160">
 </div>
-<div class="title">Fig. 85. Informe de cobertura</div>
+<div class="title">Fig. 86. Informe de cobertura</div>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
 <img src="modules/node-app/images/node-jest-coverage-index.png" alt="node jest coverage index">
 </div>
-<div class="title">Fig. 86. Informe de cobertura en html</div>
+<div class="title">Fig. 87. Informe de cobertura en html</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="2">
@@ -4535,9 +4560,9 @@ describe("GET /John", () =&gt; {
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
-<img src="modules/node-app/images/jenkins-node-coverage-report-link.png" alt="jenkins node coverage report link">
+<img src="modules/node-app/images/jenkins-node-coverage-report-link-2024.png" alt="jenkins node coverage report link 2024">
 </div>
-<div class="title">Fig. 87. Enlace al informe de cobertura en html</div>
+<div class="title">Fig. 88. Enlace al informe de cobertura en html</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="3">
@@ -4556,7 +4581,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/maven-script-console-site.png" alt="maven script console site">
 </div>
-<div class="title">Fig. 88. Script Console: permisos para visualizar el informe de cobertura</div>
+<div class="title">Fig. 89. Script Console: permisos para visualizar el informe de cobertura</div>
 </div>
 <div class="paragraph">
 <p>Tras ello ya podrás visualizar correctamente el informe de cobertura. Pero ten en cuenta que cada vez que reinicies Jenkins esta configuración  se pierde y vuelve a la configuración predeterminada.</p>
@@ -4607,7 +4632,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/eslint-init.png" alt="eslint init">
 </div>
-<div class="title">Fig. 89. ESLint init</div>
+<div class="title">Fig. 90. ESLint init</div>
 </div>
 <div class="paragraph">
 <p>Se habrá creado un archivo <code>.eslintrc.json</code>, que incluirá esta línea:</p>
@@ -4660,7 +4685,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="olist arabic">
 <ol class="arabic" start="3">
 <li>
-<p>Añade a <code>package.json</code> un script para <code>lint</code> y la dependencia a ESLint</p>
+<p>Añade a <code>package.json</code> un script para <code>lint</code> y la dependencia a ESLint, y comprueba el resto de dependencias:</p>
 </li>
 </ol>
 </div>
@@ -4674,10 +4699,10 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
    ...
    "devDependencies": {
       ...
-      "eslint": "^8.10.0",
-      "eslint-config-prettier": "^8.5.0",
-      "eslint-plugin-prettier": "^4.0.0",
-      "prettier": "^2.5.1",
+      "eslint": "^8.57.0",
+      "eslint-config-prettier": "^9.1.0",
+      "eslint-plugin-prettier": "^5.1.3",
+      "prettier": "^3.2.5",
    }
    ...</code></pre>
 </div>
@@ -4714,7 +4739,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
          always{
             // record lint issues found, also, fail the build if there are ANY NEW issues found
             recordIssues enabledForFailure: true,
-                blameDisabled: true,
+                // blameDisabled: true,
                 tools: [esLint(pattern: '**/eslint-result.xml')],
                 qualityGates: [[threshold: 1, type: 'NEW']]
         }
@@ -4733,12 +4758,18 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="content">
 <img src="modules/node-app/images/eslint-jenkins-link.png" alt="eslint jenkins link">
 </div>
-<div class="title">Fig. 90. Enlace al informe <em>ESLint</em></div>
+<div class="title">Fig. 91. Enlace al informe <em>ESLint</em></div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="7">
 <li>
-<p>No te preocupes si la fase de análisis que acabas de añadir falla (está en rojo). Es así porque cuando ESLint detecta un error, finaliza con error (<code>EXIT 1</code>). Si te fijas en el informe, los 2 errores detectados han sido en el archivo <code>test.js</code> (y pueden ser falsos positivos). Para evitarlo, elimina <code>test/*.js</code> del script <code>lint</code> en <code>package.json</code>.</p>
+<p>No te preocupes si la fase de análisis que acabas de añadir falla (está en rojo). Es así porque cuando ESLint detecta un error, finaliza con error (<code>EXIT 1</code>).
+Para evitarlo, añade ` || true` al comando <code>sh</code> que se ejecuta en la fase de análisis:</p>
+<div class="literalblock">
+<div class="content">
+<pre>sh 'npm run lint -s' || true</pre>
+</div>
+</div>
 </li>
 </ol>
 </div>
@@ -4747,9 +4778,9 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 </div>
 <div class="imageblock text-center thumb">
 <div class="content">
-<img src="modules/node-app/images/eslint-jenkins-pass-grapth.png" alt="eslint jenkins pass grapth">
+<img src="modules/node-app/images/eslint-jenkins-pass-grapth-2024.png" alt="eslint jenkins pass grapth 2024">
 </div>
-<div class="title">Fig. 91. Fase <em>ESLint</em> <em>passed</em></div>
+<div class="title">Fig. 92. Fase <em>ESLint</em></div>
 </div>
 </div>
 <div class="sect2">
@@ -4763,7 +4794,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>Con anterioridad ya instalamos NodeJS en la instancia de despliegue.</p>
+<p>Con anterioridad ya instalamos Node.js en la instancia de despliegue.</p>
 </li>
 <li>
 <p>También habíamos copiado la clave pública de despliegue para que Jenkins, que tiene la clave privada asociada, pueda hacer <code>ssh</code> y ejecutar comandos sobre ella.</p>
@@ -4772,7 +4803,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <p>Como requisito adicional, para ayudarnos a lanzar <code>npm start</code> desde Jenkins, como un proceso demonio en background, usaremos <a href="https://www.npmjs.com/package/forever"><strong>forever</strong></a>. Debes instalar <code>forever</code> en la  instancia de despliegue:</p>
 <div class="literalblock">
 <div class="content">
-<pre>sudo npm install forever -g</pre>
+<pre>npm install forever -g</pre>
 </div>
 </div>
 </li>
@@ -4784,24 +4815,29 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Copia este nueva fase en tu pipeline, sustituyendo DEPLOY_MACHINE por el nombre DNS de tu instancia, y usa el nombre del repositorio git adecuado:</p>
+<p>Copia este nueva fase en tu pipeline, sustituyendo DNS_DEPLOY_INSTANCE por el nombre DNS de tu instancia (también puedes definirla como una variable de entorno), y usa el nombre del repositorio git adecuado:</p>
 </li>
 </ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-groovy" data-lang="groovy">  stage('Deploy'){
+<pre class="highlight"><code class="language-groovy" data-lang="groovy"> environment {
+   DNS_DEPLOY_INSTANCE = "deploy.jenkinscnsa2024.tech" // "your-deploy-instance DNS"
+ }
+ ...
+  stage('Deploy'){
     steps {
       sh '''
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "if [ ! -d 'nodeapp' ] ; then
-          git clone https://github.com/ualcnsa/nodeapp.git
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "if [ ! -d 'nodeapp' ] ; then
+          git clone https://github.com/MI_CUENTA/nodeapp.git
         else
           cd nodeapp
           git pull origin master
+          git checkout MI_RAMA
         fi" <i class="conum" data-value="1"></i><b>(1)</b>
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "if pgrep node; then forever stopall; fi" <i class="conum" data-value="2"></i><b>(2)</b>
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "cd nodeapp &amp;&amp; npm install" <i class="conum" data-value="3"></i><b>(3)</b>
-        ssh -i ~/.ssh/id_rsa_deploy ubuntu@DEPLOY_MACHINE "cd nodeapp &amp;&amp; PORT=8080 forever start index.js" <i class="conum" data-value="4"></i><b>(4)</b>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.11.1/bin/ &amp;&amp; if pgrep node; then forever stopall; fi" <i class="conum" data-value="2"></i><b>(2)</b>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.11.1/bin/ &amp;&amp; cd nodeapp &amp;&amp; npm install" <i class="conum" data-value="3"></i><b>(3)</b>
+        ssh -i ~/.ssh/id_rsa_deploy ubuntu@${DNS_DEPLOY_INSTANCE} "export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.11.1/bin/ &amp;&amp; cd nodeapp &amp;&amp; PORT=8080 forever start index.js" <i class="conum" data-value="4"></i><b>(4)</b>
       '''
     }
   }</code></pre>
@@ -4811,7 +4847,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Clona el repositorio si no existe en la máquina de despliegue, si existe hace un <code>pull</code></td>
+<td>Clona el repositorio (tu fork) si no existe en la máquina de despliegue, si existe hace un <code>pull</code> y <code>checkout</code> de tu rama de trabajo.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -4827,6 +4863,20 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 </tr>
 </table>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Revisa en la máquina de despliegue la ruta de node y npm con el comando <code>whereis node</code> y <code>whereis npm</code>, y modifica la ruta del PATH en el script si es necesario.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
@@ -4835,7 +4885,7 @@ System.getProperty("hudson.model.DirectoryBrowserSupport.CSP")</code></pre>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><a href="https://codelabs.developers.google.com/codelabs/cloud-create-a-nodejs-vm/">Running Node.js on a Virtual Machine codelab</a></p>
+<p><a href="https://codelabs.developers.google.com/codelabs/cloud-create-a-Node.js-vm/">Running Node.js on a Virtual Machine codelab</a></p>
 </li>
 <li>
 <p><a href="https://medium.com/@mosheezderman/how-to-set-up-ci-cd-pipeline-for-a-node-js-app-with-jenkins-c51581cc783c">How to set up CI/CD Pipeline for a node.js app with Jenkins</a></p>
@@ -4973,7 +5023,7 @@ npm-debug.log</pre>
 <div class="content">
 <img src="modules/node-app/images/docker-login-done.png" alt="docker login done">
 </div>
-<div class="title">Fig. 92. Comprobar docker login</div>
+<div class="title">Fig. 93. Comprobar docker login</div>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -5017,7 +5067,7 @@ docker tag  &lt;your username&gt;/nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/docker-tag-nodeapp.png" alt="docker tag nodeapp">
 </div>
-<div class="title">Fig. 93. Imagen etiquetada</div>
+<div class="title">Fig. 94. Imagen etiquetada</div>
 </div>
 <div class="olist arabic">
 <ol class="arabic" start="4">
@@ -5042,7 +5092,7 @@ docker tag  &lt;your username&gt;/nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/container-registry-pushed-nodeapp.png" alt="container registry pushed nodeapp">
 </div>
-<div class="title">Fig. 94. Lista de imágenes en Container Registry</div>
+<div class="title">Fig. 95. Lista de imágenes en Container Registry</div>
 </div>
 <div class="paragraph">
 <p>La imagen del contenedor <strong>nodeapp</strong> ya está disponible en el registro privado de nuestro proyecto GCP. Utilizando nuestras credenciales podremos hacer <code>docker pull</code> de dicha imagen para descargarla en cualquier máquina con docker, y ejecutarlo con <code>docker run</code>.</p>
@@ -5244,7 +5294,7 @@ docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/jenkins-published-nodeapp-container-registry.png" alt="jenkins published nodeapp container registry">
 </div>
-<div class="title">Fig. 95. Imagen publicada en Container Registry, etiquetada con el número de build</div>
+<div class="title">Fig. 96. Imagen publicada en Container Registry, etiquetada con el número de build</div>
 </div>
 <div class="paragraph">
 <p>Por último, quedaría el paso de <strong>desplegar al entorno de producción</strong>: la máquina virtual de despliegue.</p>
@@ -5343,7 +5393,7 @@ docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 <div class="content">
 <img src="modules/node-app/images/jenkins-nodeapp-full-pipeline.png" alt="jenkins nodeapp full pipeline">
 </div>
-<div class="title">Fig. 96. Pipeline completo</div>
+<div class="title">Fig. 97. Pipeline completo</div>
 </div>
 <div class="sidebarblock">
 <div class="content">
@@ -5374,7 +5424,7 @@ docker run -p 8080:3000 -t --name nodeapp gcr.io/$GOOGLE_CLOUD_PROJECT/nodeapp:1
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-03-28 23:24:42 +0100
+Last updated 2024-03-29 16:40:04 +0100
 </div>
 </div>
 </body>

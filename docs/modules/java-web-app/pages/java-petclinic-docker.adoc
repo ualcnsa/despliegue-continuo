@@ -566,4 +566,6 @@ Si usas otras tecnologías, como NodeJs, hay que adaptar cada una de las fases a
 . https://stackoverflow.com/questions/54573068/pushing-docker-image-through-jenkins[Pushing docker image through jenkins] @ StackOverflow
 
 . https://community.jenkins.io/t/push-to-google-artifact-registry-through-jenkins-pipeline/7868/6[Push to Google Artifact Registry through Jenkins Pipeline] @ Jenkins Community
+
+. https://www.jenkins.io/doc/tutorials/build-a-java-app-with-maven/[Build a Java app with Maven] @ Jenkins.io Tutorials
 ****
