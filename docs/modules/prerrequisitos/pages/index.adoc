@@ -5,11 +5,13 @@
 
 == Entorno de desarrollo
 
-Existen distintas opciones respecto al entorno en el que realizar las actividades propuestas. Tendrás que conectar a las instancias en GCP, lanzar Terraform, lanzar contenedores Docker, etc. Dependiendo del sistema operativo de tu máquina local y de tus gustos personales, te recomiendo alguna las siguientes alternativas:
+Existen distintas opciones respecto al entorno en el que realizar las actividades propuestas. Tendrás que conectar a las instancias en un proovedor de nube pública como GCP o Azure, lanzar Terraform, lanzar contenedores Docker, etc. Dependiendo del sistema operativo de tu máquina local y de tus gustos personales, te recomiendo alguna las siguientes alternativas:
 
 - Windows: es recomendable usar un terminal basado en Linux, por ejemplo *Git Bash* (https://git-scm.com).
 - Linux y Mac: el *terminal del S.O* incluye todas las herramientas básicas necesarias (_git_, _ssh_, _etc_).
-- *Cloud Shell de Google Cloud*: la consola web de Google Cloud proporciona la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP desde cualquier navegador web y cualquier S.O. Recuerda que Cloud Shell tiene una cuota de uso, con un límite de número de horas semanales (168h): 
+
+=== Cloud Shell
+Tanto Google Cloud como Azure proporcionan la herramienta *Cloud Shell* que permite trabajar cómodamente contra GCP o Azure desde el navegador web. Recuerda que, en GCP, Cloud Shell tiene una cuota de uso, con un límite de número de horas semanales (168h): 
 
 .Cuota de Cloud Shell
 image::cloud-shell-cuota.png[role="thumb", align="center"]
@@ -19,7 +21,9 @@ image::cloud-shell-cuota.png[role="thumb", align="center"]
 Para ver tu cuota semanal, haz clic en image:session-info-icon.png[] *Información de la sesión* y, luego, en *Cuota de uso*. Aparecerá un cuadro de diálogo en el que se mostrarán las horas restantes en tu cuota, la cantidad total de horas en ella y la fecha y hora en que se restablecerá la cuota.
 ====
 
-A continuación se explican las herramientas que debes configurar si estás usando tu máquina local, aunque probablemente algunas ya las tendrás instaladas. Si optas por trabajar en Cloud Shell, seguramente también estarán ya instaladas.
+=== Entorno local
+
+A continuación se explican las herramientas que debes configurar si estás usando tu máquina local, aunque probablemente algunas ya las tendrás instaladas. Si optas por trabajar en Cloud Shell, ya estarán instaladas.
 
 CAUTION: En general evita usar el usuario `root` salvo que sea estrictamente necesario, para no generar problemas de permisos sobre los archivos y carpetas cuando estés usando un usuario distinto de `root`. 
 
@@ -76,11 +80,25 @@ ls -al ~/.ssh
 
 Además, se debe disponer de crédito en GCP, proporcionado por el profesor, y darse de alta en Github Student Education Pack. A continuación se describen en detalle estos requisitos previos.
 
-== Cupones educativos Google Cloud
+== Crédito educativo
+
+=== Cupones de Google Cloud
 
 Si ya dispones de crédito en GCP, podrás usarlo ahora. En cualquier caso, para esta asignatura disponemos de un nuevo cupón educativo de 50$ por estudiante, que no necesita tarjeta de crédito para su activación. Actívalo en la dirección que encontrarás en el https://aulavirtual.ual.es/[Aula Virtual] de la asignatura, en la sección *Area de Contenido* > *Cupones de GCP*, usando tu email __@inlumine.ual.es__.
 
 Accede a la https://console.cloud.google.com/[Consola de Google Cloud] y *crea un nuevo proyecto* GCP con el nombre *cnsa2024-__abc123__* (indicando el año correcto y sustituyendo __abc123__ por tu nombre de usuario), y dale permisos al profesor. Para ello, revisa las instrucciones que vimos en la asignatura del primer cuatrimestre. El crédito del cada cupón dura 12 meses, así que este nuevo proyecto asígnalo a la cuenta de facturación de la asignatura del primer cuatrimestre, ya que es mejor consumir ese crédito porque caduca antes. Si se consume el crédito del primer cupón, simplemente tendrás que cambiar tu proyecto *cnsa2024-__abc123__* a la nueva cuenta de facturación del nuevo cupón.
+
+=== Suscripción Azure for Students
+
+Azure for Students es una suscripción gratuita que proporciona crédito y servicios en la nube para estudiantes. 
+
+TIP: Consulta la web https://ualjjcanada.github.io/azure-tips/ para tutoriales y consejos sobre la gestión de suscripciones Azure para Estudiantes.
+
+Para activarla, sigue estos pasos:
+
+1. Accede a la página oficial de Azure para Estudiantes: https://   .microsoft.com/free/students/.
+2. Haz clic en el botón *Activar ahora* y sigue las instrucciones para registrarte con tu cuenta educativa __@inlumine.ual.es__.
+3. Una vez activada la suscripción, tendrás acceso a $100 USD en crédito durante 12 meses y a servicios gratuitos como máquinas virtuales, bases de datos y más.
 
 == Terraform
 
@@ -105,11 +123,15 @@ La salida debe mostrar la version instalada:
 [source,bash]
 ----
 $ terraform -v
-Terraform v1.1.6
+Terraform v1.11.2
 on windows_amd64
 ----
 
-== GCloud CLI para GCP
+== CLI para el proveedor de nube
+
+Un CLI (Command Line Interface) es una interfaz de usuario que permite interactuar con un sistema operativo o software a través de comandos escritos en una terminal o consola. Es una herramienta esencial para desarrolladores y administradores de sistemas, ya que permite realizar tareas de manera eficiente y automatizada.
+
+=== GCloud CLI para GCP
 
 Google Cloud Command Line Interface está disponible para su instalación https://cloud.google.com/sdk/install[aquí].
 
@@ -119,6 +141,18 @@ En Windows se recomienda instalarlo con Chocolatey: abre una ventana de comandos
 ----
 choco install gcloudsdk -y
 ----
+
+=== Azure CLI para Azure
+
+Azure CLI es una herramienta de línea de comandos que permite interactuar con los servicios de Azure. Está disponible para su instalación https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest[en esta página].
+
+En Windows se recomienda instalarlo con Chocolatey: abre una ventana de comandos (cmd) con *permiso de administrador* y ejecuta: 
+
+[source,bash]
+----
+choco install azure-cli -y
+----
+
 
 == Github Student Education Pack
 
