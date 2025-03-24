@@ -41,7 +41,7 @@ Crea una carpeta `jenkins-docker` y crea el archivo `Dockerfile`. Usa el siguien
 .Dockerfile
 [source, docker]
 ----
-FROM jenkins/jenkins:lts-jdk11
+FROM jenkins/jenkins:lts
 USER root
 RUN apt update && curl -fsSL https://get.docker.com | sh
 RUN usermod -aG docker jenkins

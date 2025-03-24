@@ -360,4 +360,4 @@ Por ejemplo, si introduces `mi-servidor` como etiqueta de DNS y tu región es `e
 [NOTE]
 ====
 Si quieres configurar un nombre de dominio externo a una VM Azure tendrás que cambiar la IP pública dinámica por una estática. Esto implica gastos, y puesto que ya tenemos un DNS, no es necesario otro
-====.
+====
