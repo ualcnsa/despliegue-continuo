@@ -91,14 +91,9 @@ Accede a la https://console.cloud.google.com/[Consola de Google Cloud] y *crea u
 === Suscripción Azure for Students
 
 Azure for Students es una suscripción gratuita que proporciona crédito y servicios en la nube para estudiantes. 
+Para activarla, sigue estos pasos descritos en el siguiente enlace: https://ualjjcanada.github.io/azure-tips/docs/crear-suscripcion-AzureParaEstudiantes.html[Creación de la suscripción Azure para Estudiantes].
 
 TIP: Consulta la web https://ualjjcanada.github.io/azure-tips/ para tutoriales y consejos sobre la gestión de suscripciones Azure para Estudiantes.
-
-Para activarla, sigue estos pasos:
-
-1. Accede a la página oficial de Azure para Estudiantes: https://   .microsoft.com/free/students/.
-2. Haz clic en el botón *Activar ahora* y sigue las instrucciones para registrarte con tu cuenta educativa __@inlumine.ual.es__.
-3. Una vez activada la suscripción, tendrás acceso a $100 USD en crédito durante 12 meses y a servicios gratuitos como máquinas virtuales, bases de datos y más.
 
 == Terraform
 
@@ -146,13 +141,11 @@ choco install gcloudsdk -y
 
 Azure CLI es una herramienta de línea de comandos que permite interactuar con los servicios de Azure. Está disponible para su instalación https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest[en esta página].
 
-En Windows se recomienda instalarlo con Chocolatey: abre una ventana de comandos (cmd) con *permiso de administrador* y ejecuta: 
+Sigue los pasos descritos en https://ualjjcanada.github.io/azure-tips/docs/azure-cli.html[este enlace] para instalar Azure CLI en tu máquina local y comenzar a trabajar con Azure CLI: 
 
-[source,bash]
-----
-choco install azure-cli -y
-----
-
+- Autenticación
+- Máquinas virtuales
+- Discos
 
 == Github Student Education Pack
 
