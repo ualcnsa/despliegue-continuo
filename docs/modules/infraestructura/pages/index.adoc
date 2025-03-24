@@ -5,7 +5,7 @@ COLOCA A CONTINUACION LOS OBJETIVOS
 ////
 .Objetivos
 ====
-Utilizando una plantilla de terraform crea 2 instancias de máquina virtuales en tu proyecto en Google Cloud: 
+Utilizando una plantilla de terraform crea 2 instancias de máquina virtuales el proveedor de servicios cloud Google Cloud.: 
 
 . Instancia para instalar Jenkins mediante un contenedor Docker.
 . Instancia de despliegue (VM Deploy) con Docker y Docker Composer instalados.
@@ -15,10 +15,16 @@ image::terraform-vm-schema.png[role="thumb", align="center"]
 
 ====
 
-== Estructura del proyecto terraform
+== Platilla del proyecto terraform
 
-Para crear las instancias, utiliza la plantilla de terraform disponible en el repositorio https://github.com/ualcnsa/terraformGoogleCloudSample. 
-En primer lugar realiza un __fork__ del repositorio, para hacer las modificaciones al mismo que sean necesarias. Después, sobre tu __fork__, modifica las variables correspondientes para usar tu proyecto en la plantilla, tal y como se describe a continuación.
+Para crear las instancias, utiliza la plantilla de terraform disponible en función del proveedor que vayas a usar: 
+
+- GCP: la encontrarás en el repositorio https://github.com/ualcnsa/terraformGoogleCloudSample. 
+- Azure: la encontrarás en el repositorio https://github.com/ualcnsa/terraformNewAzureSample
+
+En primer lugar realiza un __fork__ del repositorio plantilla, para hacer las modificaciones al mismo que sean necesarias. Después, sobre tu __fork__, modifica las variables correspondientes para usar tu proyecto en la plantilla, tal y como se describe a continuación.
+
+== GCP
 
 El repositorio consta de tres archivos con extension .tf, y una carpeta con un template para la creación de instancias.
 
@@ -72,7 +78,7 @@ provider "google" {
 <1> Sustituye este valor por el nombre de tu proyecto, indicando el año correcto y concatenando tu nombre de usuario de la UAL (__cnsa2024-abc123__)
 <2> Versión del proveedor de Google Cloud que se va a utilizar. Utiliza la última disponible, que puedes consultar en https://registry.terraform.io/providers/hashicorp/google/latest[aquí].
 
-== Creación de la clave para la Cuenta de servicio
+=== Creación de la clave para la Cuenta de servicio
 
 Para que terraform pueda conectar al __provider__ Google Cloud desde tu máquina local, debes proporcionar clave para la Cuenta de servicio. 
 
@@ -132,7 +138,73 @@ Recuerda: *NUNCA subas tu archivo de credenciales json* a un repositorio públic
 En el archivo de credenciales va tu *clave privada* que sustituye a tu usuario y contraseña para crear recursos en GCP. Hay *robots* que continuamente analizan repositorios públicos de  GitHub buscando PRIVATE KEYS y API TOKENS. Si un __hacker__ accede a ese archivo, lo usará para crear servicios hasta agotar tu crédito por completo, fundamentalmente para *minar bitcoins*.
 ====
 
+=== Azure
+
+En el caso de que optes por Azure, la plantilla Terraform para Azure crea una red virtual, un grupo de seguridad de red y dos máquinas virtuales utilizando una definición de módulo.
+. **VM 1**: Preparada para Docker  
+  - Usada para el despliegue de Jenkins en Docker.
+
+. **VM 2**: Preparada para Docker, con Docker Compose, JDK 17 y NodeJS LTS instalados  
+  - Usada para el despliegue de aplicaciones web.
+
+Los pasos para la configuración son: 
+
+. Crea un archivo `terraform.tfvars` basado en la plantilla:
+
+[source,bash]
+----
+cp terraform.tfvars.example terraform.tfvars
+----
+
+. Obtén tus credenciales de Azure con:
+
+[source,bash]
+----
+az login
+az account set --subscription="YOUR_SUBSCRIPTION_ID"
+az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/YOUR_SUBSCRIPTION_ID"
+----
+
+. Edita el archivo `terraform.tfvars` para agregar tus credenciales de Azure:
+
+[source,tf]
+----
+azure_subscription_id = "your-subscription-id"
+azure_tenant_id       = "your-tenant-id"
+azure_client_id       = "your-client-id"
+azure_client_secret   = "your-client-secret"
+----
+
+. Asegúrate de tener una clave SSH válida en `~/.ssh/id_rsa.pub`.  
+Si no tienes una, genera una nueva con:
+
+[source,bash]
+----
+ssh-keygen -t rsa -b 4096
+----
+
+. Ejecuta los comandos de Terraform directamente:
+
+[source,bash]
+----
+terraform init
+terraform plan
+terraform apply
+----
+
+El comando `terraform apply` creará:
+
+- 1 Grupo de Recursos
+- 1 Red Virtual con subred
+- 1 Grupo de Seguridad de Red con reglas para SSH (puerto 22), HTTP (puerto 80) y Jenkins (puerto 8080)
+- 2 Instancias de máquinas virtuales con Ubuntu 22.04 LTS
+- 2 Direcciones IP públicas dinámicas, con un DNS asignado.
+
+
 == Ejecución de terraform
+
+A continuación, vamos a ejecutar la plantilla de terraform para crear las instancias. Se describen los comandos y las salidas esperadas para hacerlo en GCP. Los comandos de terraform son similares para la plantilla de Azure. 
+
 .Videotutorial
 ****
 Accede al https://drive.google.com/file/d/1_ku2LnVbMmWgns-s8_23ATAQ3nrQEJo2/view?usp=sharing[videotutorial, window="_blank"] explicativo de esta sección (mp4, 20 minutos, 171M).
@@ -194,9 +266,21 @@ Si necesitas destruir y volver a crear un recurso concreto, y no todo el plan:
 
 terraform destroy -target=<recurso> --auto-approve: Destruye un recurso concreto.
 
-== Cloud DNS
 
+== Asignación de DNS
+
+Este paso es muy recomendable para poder acceder a las instancias de forma más sencilla. 
+
+=== Azure
+
+Si estamos trabajando en Azure, nuestras máquinas ya tendrán un nombre de DNS asignado, ya que la plantilla ya está preparada para crear IPs dinámicas, que se liberan al apagar la máquina y tomas una nueva IP al encenderla. Por ese motivo, Azure permite asignar un nombre de DNS a cada instancia que no cambiará al reiniciar la máquina.
+
+Sin embargo, en GCP tendremos que asignar un nombre de DNS a las IPs publicas. 
+
+=== GCP 
 Google Cloud ha asignado una IP pública estática a cada una de tus instancias (la IP no cambiará al apagar la instancia y volver a encenderla). A continuación, vamos a asignar nombres de DNS a esas IPs con Cloud DNS y uno de los servicios de DNS disponibles en el Student Pack de GitHub. 
+
+A continuación se describe cómo hacerlo para GCP con un dominio .tech, pero puedes usar cualquier otro dominio que tengas disponible.
 
 === Alta de nombre de dominio
 
