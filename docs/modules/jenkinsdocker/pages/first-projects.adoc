@@ -79,15 +79,15 @@ Haz clic sobre *Build now*, y visualiza la consola. Como parte de la salida, se 
 ----
 [Pipeline] sh
 + java -version
-openjdk version "17.0.10" 2024-01-16
-OpenJDK Runtime Environment Temurin-17.0.10+7 (build 17.0.10+7)
-OpenJDK 64-Bit Server VM Temurin-17.0.10+7 (build 17.0.10+7, mixed mode)
+openjdk version "17.0.14" 2025-01-21
+OpenJDK Runtime Environment Temurin-17.0.14+7 (build 17.0.14+7)
+OpenJDK 64-Bit Server VM Temurin-17.0.14+7 (build 17.0.14+7, mixed mode)
 + mvn -v
-Apache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)
+Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)
 Maven home: /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/Default_Maven
-Java version: 17.0.10, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk
+Java version: 17.0.14, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk
 Default locale: en, platform encoding: UTF-8
-OS name: "linux", version: "6.5.0-1014-gcp", arch: "amd64", family: "unix"
+OS name: "linux", version: "6.8.0-1021-azure", arch: "amd64", family: "unix"
 ----
 
 [WARNING]
@@ -135,9 +135,9 @@ Te dará error al construir el proyecto.
 [source,bash,subs="verbatim,quotes"]
 ----
 [Pipeline] sh
-+ docker inspect -f . maven:3.9-eclipse-temurin-21-jammy
++ docker inspect -f . maven:3.9-eclipse-temurin-21-alpine
 
-permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/maven:3.9-eclipse-temurin-21-jammy/json": dial unix /var/run/docker.sock: connect: permission denied
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.48/containers/maven:3.9-eclipse-temurin-21-alpine/json": dial unix /var/run/docker.sock: connect: permission denied
 ----
 
 El motivo es que en la máquina Jenkins, sobre el S.O. host, hay que abrir permisos en el socket de Docker para que desde dentro del contenedor Jenkins permita crear otros contenedores _hermanos_. Para ello, mediante el terminal `ssh` modifica los permisos así:
@@ -152,15 +152,15 @@ Tras ello deben construirse correctamente. La nueva salida será algo así:
 ----
 [Pipeline] sh
 + java -version
-openjdk version "21.0.2" 2024-01-16 LTS
-OpenJDK Runtime Environment Temurin-21.0.2+13 (build 21.0.2+13-LTS)
-OpenJDK 64-Bit Server VM Temurin-21.0.2+13 (build 21.0.2+13-LTS, mixed mode, sharing)
+openjdk version "21.0.6" 2025-01-21 LTS
+OpenJDK Runtime Environment Temurin-21.0.6+7 (build 21.0.6+7-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.6+7 (build 21.0.6+7-LTS, mixed mode, sharing)
 + mvn -v
-Apache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)
+Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)
 Maven home: /usr/share/maven
-Java version: 21.0.2, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk
+Java version: 21.0.6, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk
 Default locale: en_US, platform encoding: UTF-8
-OS name: "linux", version: "6.5.0-1014-gcp", arch: "amd64", family: "unix"
+OS name: "linux", version: "6.8.0-1021-azure", arch: "amd64", family: "unix"
 ----
 
 
@@ -190,10 +190,11 @@ srw-rw-rw- 1 root docker 0 Mar  2 19:24 /var/run/docker.sock
 
 [WARNING]
 ====
-No olvides que abrir permisos aL archivo `/var/run/docker.sock` supone ciertos problemas de seguridad: _Avoid workarounds like this which could be a big potential security threat. The result of your chmod practically gives all local users read and write permissions to the docker-socket which allows anyone to interfere with your docker images._ (https://serverfault.com/questions/821062/how-to-run-sudo-chmod-666-var-run-docker-sock-on-ubuntu-before-the-services[fuente]).
+No olvides que abrir permisos al archivo `/var/run/docker.sock` supone ciertos problemas de seguridad: _Avoid workarounds like this which could be a big potential security threat. The result of your chmod practically gives all local users read and write permissions to the docker-socket which allows anyone to interfere with your docker images._ (https://serverfault.com/questions/821062/how-to-run-sudo-chmod-666-var-run-docker-sock-on-ubuntu-before-the-services[fuente]).
 ====
 
-Otros ejemplos similares con contenedores NodeJS están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]
+Otros ejemplos similares con contenedores NodeJS están disponibles en la https://www.jenkins.io/doc/book/pipeline/docker/[documentación de Jenkins]. 
+
 
 === Usando varios contenedores como agente
 
@@ -230,6 +231,10 @@ pipeline {
 .Pipeline con varios contenedores como agentes
 image::jenkins-pipeline-multiple-containers-2024.png[role="thumb", align="center"]
 
+[NOTE]
+====
+Más info en: https://www.jenkins.io/doc/book/pipeline/docker/#using-multiple-containers[Using multiple containers].
+====
 
 == Conexión con la máquina de despliegue
 
@@ -248,13 +253,13 @@ Ejecuta los siguientes pasos:
 
 === Generar la nueva pareja de claves de despliegue
 
-. Conecta por SSH a la máquina Jenkins: `ssh ubuntu@__instancia-jenkins__`
+. Conecta por SSH a la máquina Jenkins: `ssh ubuntu@__instancia-jenkins__` o bien `ssh azureuser@__instancia-jenkins__` si estás trabajando con Azure.
 
 .Conexión SSH a la instancia Jenkins
 image::ssh-from-developer-to-jenkins.png[role="thumb", align="center"]
 
 [start=2]
-. Crea la carpeta donde se va a guardar la nueva pareja de claves: `mkdir /home/ubuntu/jenkins_home/.ssh`
+. Crea la carpeta donde se va a guardar la nueva pareja de claves: `mkdir ~/jenkins_home/.ssh` y muevete a ella con `cd ~/jenkins_home/.ssh`.
 . Crea una pareja de claves ssh de despliegue: `ssh-keygen -t rsa -b 4096`
 . Cuando pida el *nombre*, escribe el nuevo nombre *id_rsa_deploy* junto con la ubicación donde Jenkins va a buscar las claves de forma predeterminada, que es: `/home/ubuntu/jenkins_home/.ssh/*id_rsa_deploy*`
 . Por último, deja la contraseña en blanco (pulsa ENTER): `Enter passphrase (empty for no passphrase):`
@@ -272,7 +277,7 @@ image::jenkins-ls-deploy-keys.png[role="thumb", align="center"]
 . Muestra el contenido de la clave pública: 
 [source,bash,subs="verbatim,quotes"]
 ----
-cat /home/ubuntu/jenkins_home/.ssh/id_rsa_deploy.pub
+cat ~/jenkins_home/.ssh/id_rsa_deploy.pub
 ----
 
 [start=7]
@@ -298,7 +303,7 @@ image::ssh-from-developer-to-deploy.png[role="thumb", align="center"]
 . Edita el archivo `authorized_keys`:  
 [source,bash,subs="verbatim,quotes"]
 ----
-nano /home/ubuntu/.ssh/authorized_keys
+nano ~/.ssh/authorized_keys
 ----
 
 [start=12]
@@ -346,7 +351,7 @@ image::ssh-host-connection-deploy-exit.png[role="thumb", align="center"]
 
 [NOTE]
 ====
-Si no ha correcto, verifica que la ruta al archivo de la clave privada es correcta, y que el nombre de la máquina de despliegue es correcto. 
+Si no ha sido correcto, verifica que la ruta al archivo de la clave privada es correcta, y que el nombre de la máquina de despliegue es correcto. 
 ====
 
 [start=17] 

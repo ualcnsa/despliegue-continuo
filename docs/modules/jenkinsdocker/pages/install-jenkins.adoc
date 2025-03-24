@@ -9,11 +9,13 @@ La imagen pública del contenedor de Jenkins está disponible en https://hub.doc
 Por tanto, vamos a crear una imagen personalizada del contenedor de Jenkins basándonos en la imagen pública e instalándo Docker dentro del contenedor.
 Lo más adecuado es que construyas la imagen de Jenkins con Docker en la propia máquina donde lo vamos a ejecutar, es decir en la instancia de jenkins. 
 
-Conecta por ssh a la instancia de jenkins. Recuerda que el usuario de la instancia es `ubuntu`. Por tanto, la conexión a la misma  consistiría en ejecutar desde el terminal el comando 
+Conecta por ssh a la instancia de jenkins. Recuºs `ubuntu` (o bien `azureuser` si estás trabajando con Azure). Por tanto, la conexión a la misma  consistiría en ejecutar desde el terminal el comando 
 ```
-ssh ubuntu@MAQUINA_JENKINS
+ssh ubuntu@DNS_MAQUINA_JENKINS
+o bien
+ssh azureuser@DNS_MAQUINA_JENKINS
 ```
-sustituyendo MAQUINA_JENKINS por la IP o el nombre DNS de la misma. 
+sustituyendo DNS_MAQUINA_JENKINS por la IP o el nombre DNS de la misma. 
 
 [WARNING]
 ====
@@ -39,28 +41,10 @@ Crea una carpeta `jenkins-docker` y crea el archivo `Dockerfile`. Usa el siguien
 .Dockerfile
 [source, docker]
 ----
-FROM jenkins/jenkins:lts
-
+FROM jenkins/jenkins:lts-jdk11
 USER root
-
-RUN apt-get update && \
-apt-get -y install apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg2 \
-    software-properties-common && \
-curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
-add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
-    $(lsb_release -cs) \
-    stable" && \
-  apt-get update && \
-  apt-get -y install docker-ce
-
-RUN apt-get install -y docker-ce
-
-RUN usermod -a -G docker jenkins
-
+RUN apt update && curl -fsSL https://get.docker.com | sh
+RUN usermod -aG docker jenkins
 USER jenkins
 ----
 
@@ -138,7 +122,7 @@ A continuación se muestran los pasos a realizar en el inicio y configuración b
 
 . Conectamos a la IP/URL de la instancia con el navegador web. Aparecerá la ventana para introducir el password inicial. Para ver el password ejecuta: 
 ```
-cat /home/ubuntu/jenkins_home/secrets/initialAdminPassword
+cat ~/jenkins_home/secrets/initialAdminPassword
 ```
 
 .Contraseña inicial de Jenkins
@@ -161,13 +145,18 @@ image::jenkins-welcome.png[role="thumb", align="center"]
 
 == Instalación de plugins adicionales
 
-Vamos a instalar varios plugins: NodeJs, GitHub integration, Docker Pipeline, Warnings (Next Generation), JaCoCo, Coverage, https://plugins.jenkins.io/google-container-registry-auth[Google Container Registry Auth]. 
+Vamos a instalar varios plugins: NodeJs, GitHub integration, Docker Pipeline, Warnings, JaCoCo, Coverage, https://plugins.jenkins.io/google-container-registry-auth[Google Container Registry Auth], CloudBees Docker Hub/Registry Notification, Azure Container Registry Tasks. 
 
-Haz clic en __Manage Jenkins__ > __Manage Plugins__. En la pestaña __Available__ busca __Github integration__, seleccionalo y pulsa en __Download now and install after restart__.
+Haz clic en __Manage Jenkins__ > __ Plugins__. En la pestaña __Available__ busca __Github integration__, seleccionalo y pulsa en __Download now and install after restart__.
 
 .Instalación del plugin Github integration
 image::jenkins-plugins-github-integration.png[role="thumb", align="center"]
 
+[WARNING]
+====
+Si no ves ningun plugin disponible, es posible que tengas que reiniciar Jenkins. 
+
+====
 Repite los pasos para los plugins el resto de plugins.
 
 .Instalación del plugin NodeJS
@@ -182,7 +171,7 @@ image::jenkins-plugins-restart.png[role="thumb", align="center"]
 
 Tras la instalación del plugin https://plugins.jenkins.io/nodejs/[__NodeJS__], es necesario realizar la siguiente configuración: 
 
-. Ve a __Manage Jenkins__, __Global Tool configuration__.
+. Ve a __Manage Jenkins__, __Tools__.
 . En *NodeJS*, añade un instalador (se recomienda la última versión _lts_ disponible). Dale por nombre "nodejs lts" y marca instalar automáticamente. 
 . Guarda los cambios con _Save_.
 
