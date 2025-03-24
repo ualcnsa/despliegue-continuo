@@ -138,9 +138,10 @@ Recuerda: *NUNCA subas tu archivo de credenciales json* a un repositorio públic
 En el archivo de credenciales va tu *clave privada* que sustituye a tu usuario y contraseña para crear recursos en GCP. Hay *robots* que continuamente analizan repositorios públicos de  GitHub buscando PRIVATE KEYS y API TOKENS. Si un __hacker__ accede a ese archivo, lo usará para crear servicios hasta agotar tu crédito por completo, fundamentalmente para *minar bitcoins*.
 ====
 
-=== Azure
+== Azure
 
 En el caso de que optes por Azure, la plantilla Terraform para Azure crea una red virtual, un grupo de seguridad de red y dos máquinas virtuales utilizando una definición de módulo.
+
 . **VM 1**: Preparada para Docker  
   - Usada para el despliegue de Jenkins en Docker.
 
@@ -293,7 +294,7 @@ image::tech-domain-disponible.png[role="thumb", align="center"]
 
 A continuación, inicia sesión con tu cuenta de github, y verás que tienes el descuento por un año. Procede a la compra gratuita. Además, tendrás que registrarte para poder acceder posteriormente a la configuración. Debes completar los datos de registro ya que te identifican como propietario del nombre de dominio. Si lo deseas, usa como dirección __Universidad de Almería, Ctra. Sacramento s/n, 04120, Almería, Spain__. 
 
-=== Configuración de nombres de dominio
+=== Configuración de nombres de dominio en GCP
 
 Para configurar el nombre de dominio que acabas de adquirir a las IPs reservadas, debes usar Cloud DNS en Google Cloud. Cloud DNS permite asignar los nombres de dominio a las direcciones IP públicas de las instancias. Recuerda comprobar que las IPs son estáticas.
 
@@ -337,3 +338,26 @@ image::get-tech-manage-servers.png[role="thumb", align="center"]
 
 [start=6]
 . Guarda los cambios. Hasta *pasadas 24 horas* no estarán disponibles.
+
+=== Configuración de nombres de dominio en Azure
+
+En Azure, la configuración de nombres de dominio es más sencilla, ya que la plantilla Terraform ya asigna un nombre DNS a las máquinas virtuales creadas. Sin embargo, si deseas personalizar ese nombre de dominio, puedes seguir estos pasos:
+
+1. Accede al portal de Azure y selecciona el recurso de la máquina virtual que deseas configurar.
+
+2. En el menú lateral, selecciona *Configuración* > *Configuración de red*.
+
+3. En la sección de *Dirección IP pública*, haz clic en el nombre de la dirección IP asociada.
+
+4. En la página de configuración de la dirección IP pública, busca la sección *Configuración de DNS*.
+
+5. Introduce un nombre único en el campo *Etiqueta de DNS*. Este nombre será el subdominio que se asignará a la dirección IP pública de la máquina virtual.
+
+6. Guarda los cambios. El nombre DNS estará disponible en unos minutos y tendrá el formato `<etiqueta>.region.cloudapp.azure.com`.
+
+Por ejemplo, si introduces `mi-servidor` como etiqueta de DNS y tu región es `eastus`, el nombre DNS será `mi-servidor.eastus.cloudapp.azure.com`.
+
+[NOTE]
+====
+Si quieres configurar un nombre de dominio externo a una VM Azure tendrás que cambiar la IP pública dinámica por una estática. Esto implica gastos, y puesto que ya tenemos un DNS, no es necesario otro
+====.
