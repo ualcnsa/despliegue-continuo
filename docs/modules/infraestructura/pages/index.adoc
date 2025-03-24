@@ -1,4 +1,4 @@
-= Creación de la infraestructura en Google Cloud
+= Creación de la infraestructura con Terraform
 
 ////
 COLOCA A CONTINUACION LOS OBJETIVOS
