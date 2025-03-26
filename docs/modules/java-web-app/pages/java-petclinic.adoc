@@ -32,26 +32,31 @@ java -jar target/*.jar <2>
 
 <2> Ejecuta la aplicación a partir del `.jar`. Puedes acceder a PetClinic en: http://localhost:8080/
 
+[NOTE]
+====
+Para que la construcción ejecute correctamente todos los tests debes tener docker instalado y funcionando, ya que en el proceso descarga los contenedores de MySQL y PostgreSQL para ejecutar los tests de integración. Si no tienes docker, puedes saltarte los tests de integración con el comando `./mvnw package -Dtest=!PostgresIntegrationTests*`.
+====
+
 .Página principal de PetClinic
 image::petclinic-homepage.png[role="thumb", align="center"]
 
 En su configuración predeterminada, Petclinic utiliza una base de datos en memoria (http://www.h2database.com/html/main.html[H2]) que se inicia con datos predeterminados, y los nuevos datos que se guarden se pierden al reiniciar la aplicación. 
 
-En caso de necesitar persistencia de los datos, PetClinic también está preconfigurada para usar MySql. Para cambiar el tipo de base de datos, la aplicación debe ejecutarse con un perfil de MySql: `spring.profiles.active=mysql`.
+En caso de necesitar persistencia de los datos, PetClinic también está preconfigurada para usar MySQL. Para cambiar el tipo de base de datos, la aplicación debe ejecutarse con un perfil de MySQL: `spring.profiles.active=mysql`.
 
 [source,bash]
 ----
 java -Dspring.profiles.active=mysql -jar target/*.jar 
 ----
 
-Recuerda que para ejecutarla en este modo, debes tener un MySql funcionando en local, o bien lanzar MySql como contenedor con *docker* o con *docker-compose*. Existe un archivo `docker-compose.yml` https://github.com/spring-projects/spring-petclinic/blob/main/docker-compose.yml[disponible en el repositorio] del proyecto PetClinic, por tanto puedes iniciar MySql así:
+Recuerda que para ejecutarla en este modo, debes tener un MySQL funcionando en local, o bien lanzar MySQL como contenedor con *docker* o con *docker-compose*. Existe un archivo `docker-compose.yml` https://github.com/spring-projects/spring-petclinic/blob/main/docker-compose.yml[disponible en el repositorio] del proyecto PetClinic, por tanto puedes iniciar MySQL así:
 
 [source,bash]
 ----
-docker-compose up -d 
+docker compose up mysql -d
 ----
 
-El archivo `docker-compose.yml` que permite iniciar MySql y Postgres puedes consultarlo en la carpeta raíz del proyecto.
+El archivo `docker-compose.yml` que permite iniciar MySQL o PostgreSQL puedes consultarlo en la carpeta raíz del proyecto.
 
 [NOTE]
 ====
@@ -60,7 +65,7 @@ Si abres el repositorio de PetClinic con VS Code, verás que el IDE te sugiere a
 .Aviso Dev Containers en Visual Studio Code
 image::vscode-devcontainer-banner.png[role="thumb", align="center", width="60%"]
 
-Pero si aceptas, se descargará una imagen de Docker con un entorno de desarrollo preconfigurado para trabajar con el proyecto, así como las imágenes de MySql y Postgres. En ese caso, al lanzar la construcción del proyecto, los tests de integración se ejecutan sobre las bases de datos MySql y Postgres.
+Pero si aceptas, se descargará una imagen de Docker con un entorno de desarrollo preconfigurado para trabajar con el proyecto, así como las imágenes de MySQL y PostgreSQL . En ese caso, al lanzar la construcción del proyecto, los tests de integración se ejecutan sobre las bases de datos MySQL y Postgres.
 ====
 
 
